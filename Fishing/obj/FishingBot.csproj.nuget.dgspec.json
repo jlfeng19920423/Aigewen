@@ -1,0 +1,85 @@
+{
+  "format": 1,
+  "restore": {
+    "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\FishingBot.csproj": {}
+  },
+  "projects": {
+    "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj": {
+      "restore": {
+        "projectUniqueName": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj",
+        "projectName": "BloogBot",
+        "projectPath": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj",
+        "frameworks": {
+          "net48": {
+            "projectReferences": {}
+          }
+        }
+      },
+      "frameworks": {
+        "net48": {}
+      }
+    },
+    "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\FishingBot.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\FishingBot.csproj",
+        "projectName": "FishingBot",
+        "projectPath": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\FishingBot.csproj",
+        "packagesPath": "C:\\Users\\tommy\\.nuget\\packages\\",
+        "outputPath": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\tommy\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {
+              "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj": {
+                "projectPath": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.302\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
