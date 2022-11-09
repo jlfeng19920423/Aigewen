@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BloogBot.Game
 {
-    class Fields
+    public class Fields
     {
         public class Inventory
         {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace BloogBot.Game
 {
@@ -29,7 +30,7 @@ namespace BloogBot.Game
 
         public float Z { get; }
 
-        public float Id { get; }
+        public int Id { get; }
 
         public override string ToString() => $"X: {Math.Round(X, 2)}, Y: {Math.Round(Y, 2)}, Z: {Math.Round(Z, 2)}";
 

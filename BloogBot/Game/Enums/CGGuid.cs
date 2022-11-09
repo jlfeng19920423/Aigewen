@@ -7,7 +7,7 @@ namespace BloogBot.Game.Enums
     {
         public ulong low;
         public ulong high;
-
+        
         public bool isEmpty() { return high == 0 && low == 0; }
 
         public bool isEqualTo(CGGuid guid)

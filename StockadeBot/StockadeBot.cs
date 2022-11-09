@@ -4,32 +4,33 @@ using BloogBot.AI.SharedStates;
 using BloogBot.Game;
 using BloogBot.Game.Objects;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BloogBot.Bots
+namespace StockadeBot
 {
-    class FishingBot : Bot, IBot
+    [Export(typeof(IBot))]
+    public class StockadeBot : Bot, IBot
     {
         readonly Stack<IBotState> botStates = new Stack<IBotState>();
 
         bool running;
         public bool Running() => running;
-        bool retrievingCorpse;
 
         Type currentState;
         int currentStateStartTime;
         Position currentPosition;
         int currentPositionStartTime;
         Position teleportCheckPosition;
-        bool isFalling;
         int currentLevel;
 
-        public FishingBot()
+        public StockadeBot()
         {
-            initialStacks();
+            initialActionList();
         }
 
         Action stopCallback;
@@ -60,22 +61,19 @@ namespace BloogBot.Bots
                 probe);
         //hotspots);
 
-        
-        public static ActionList actionList;
-        public static List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack = new List<Func<Stack<IBotState>, ActionList, IBotState>>();
-        
-        public void Start(List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack, ActionList actionList, Action stopCallback)
+        public List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack = new List<Func<Stack<IBotState>, ActionList, IBotState>>();
+
+        public void Start(ActionList actionList, Action stopCallback)
         {
             this.stopCallback = stopCallback;
             try
             {
                 running = true;
-                ObjectManager.TraverseObjectManager();
 
-                var closestWaypoint = actionList.waypoints
+                var closestWaypoint = actionList.Waypoints
                     .OrderBy(w => w.DistanceTo(ObjectManager.Player.UnitPosition))
                     .First();
-                var startingIndex = actionList.waypoints
+                var startingIndex = actionList.Waypoints
                     .ToList()
                     .IndexOf(closestWaypoint);
 
@@ -94,8 +92,8 @@ namespace BloogBot.Bots
                         callback();
                     }
                     */
-                    
-                    botStates.Push(new ActionStackState(botStates, stateStack, actionList));
+
+                    botStates.Push(new ActionStackState(botStates, actionList));
 
                     currentState = botStates.Peek().GetType();
                     currentStateStartTime = Environment.TickCount;
@@ -120,7 +118,7 @@ namespace BloogBot.Bots
                     //Console.WriteLine(botStates.Peek()?.GetType().Name);
                     ThreadSynchronizer.RunOnMainThread(() =>
                     {
-                        if (botStates.Count() == 0 || actionList.ActionIndex==-1)
+                        if (botStates.Count() == 0 || actionList.ActionIndex == -1)
                         {
                             Stop();
                             return;
@@ -161,13 +159,23 @@ namespace BloogBot.Bots
         }
 
         public void Test(IDependencyContainer container) { }
-        
-        
-        static public IList<Position> waypoints = new List<Position>();
-        static public IList<int> actionIndexList = new List<int>();
-        static public IList<int> nextactionIndexList = new List<int>();
-        public void initialStacks()
+
+
+        static public List<Position> waypoints = new List<Position>();
+        static public List<int> actionIndexList = new List<int>();
+        static public List<int> nextactionIndexList = new List<int>();
+
+        public ActionList actionList => initialActionList();
+
+        ActionList initialActionList()
         {
+            ActionList actions;
+
+            IBotState CreateMoveToPositionState(Stack<IBotState> botStates, ActionList ActionList) => new MoveToPositionState(botStates, ActionList);
+            IBotState CreateFaceTo(Stack<IBotState> botStates, ActionList ActionList) => new FaceTo(botStates, ActionList);
+            IBotState CreateFishingState(Stack<IBotState> botStates, ActionList ActionList) => new FishingState(botStates, ActionList);
+
+
             waypoints.Add(new Position((float)-8838.341, (float)634.9344, (float)94.64573, 0));
             waypoints.Add(new Position((float)-8842.917, (float)641.5321, (float)95.70744, 1));
             waypoints.Add(new Position((float)-8846.967, (float)651.1913, (float)96.78641, 2));
@@ -190,6 +198,7 @@ namespace BloogBot.Bots
             actionIndexList.Add(9);
             actionIndexList.Add(10);
 
+
             nextactionIndexList.Add(1);
             nextactionIndexList.Add(2);
             nextactionIndexList.Add(3);
@@ -202,12 +211,6 @@ namespace BloogBot.Bots
             nextactionIndexList.Add(10);
             nextactionIndexList.Add(-1);
 
-            actionList = new ActionList(waypoints, actionIndexList, nextactionIndexList);
-
-            actionList.ActionIndex = 0;
-
-
-            IBotState CreateMoveToPositionState(Stack<IBotState> botStates, ActionList actionList)=> new MoveToPositionState(botStates, actionList);
             stateStack.Add(CreateMoveToPositionState); //index 0
             stateStack.Add(CreateMoveToPositionState); //index 1
             stateStack.Add(CreateMoveToPositionState); //index 2
@@ -217,13 +220,19 @@ namespace BloogBot.Bots
             stateStack.Add(CreateMoveToPositionState); //index 6
             stateStack.Add(CreateMoveToPositionState); //index 7
             stateStack.Add(CreateMoveToPositionState); //index 8
-
-            IBotState CreateFaceTo(Stack<IBotState> botStates, ActionList actionList) => new FaceTo(botStates, actionList);
             stateStack.Add(CreateFaceTo); //index 9
-
-            IBotState CreateFishingState(Stack<IBotState> botStates, ActionList actionList) => new FishingState(botStates, actionList);
             stateStack.Add(CreateFishingState); //index 10
+
+
+
+            actions = new ActionList(waypoints, actionIndexList, nextactionIndexList, stateStack);
+            actions.ActionIndex = 0;
+
+            return actions;
         }
+
+
+
     }
 
     class MoveToTargetState : IBotState
@@ -248,7 +257,7 @@ namespace BloogBot.Bots
             this.target = target;
             player = ObjectManager.Player;
             stuckHelper = new StuckHelper(botStates, container);
-            if (player.KnowsSpell(CurseOfAgony))
+            if (player.KnowsSpell(CurseOfAgony, false))
                 pullingSpell = CurseOfAgony;
             else
                 pullingSpell = ShadowBolt;
@@ -421,207 +430,4 @@ namespace BloogBot.Bots
         //bool InCombat => ObjectManager.Player.IsInCombat || ObjectManager.Units.Any(u => u.TargetGuid == ObjectManager.Player.Guid || u.TargetGuid == ObjectManager.Pet?.Guid);
     }
 
-    class FishingState : IBotState
-    {
-        readonly Stack<IBotState> botStates;
-        //readonly IDependencyContainer container;
-        readonly LocalPlayer player;
-        WoWGameObject gameObject;
-        readonly ActionList actionList;
-        bool fishing;
-        byte Animating = 0;
-        
-
-        State state = State.Uninitialized;
-        //int stuckCount;
-
-        //public MoveToPositionState(Stack<IBotState> botStates, IDependencyContainer container, Position destination, bool use2DPop = false)
-        public FishingState(Stack<IBotState> botStates, ActionList actionList)
-        {
-            this.botStates = botStates;
-            this.actionList = actionList;
-            player = ObjectManager.Player;
-            this.fishing = false;
-        }
-
-        public void Update()
-        {
-            //int fishingspell = GetFishingLevel();
-            int fishingspell = 7620;
-            //Console.WriteLine("fishingspell:{0}",fishingspell);
-            //Console.WriteLine("FishingState");
-            if (player.MoveFlag > 0) return;
-
-            if (state == State.Uninitialized)
-            {
-                if (player.ChanID == fishingspell && this.fishing == true)
-                {
-                    state = State.Fishing;
-                }
-                else
-                {
-                    state = State.NotFishing;
-                }
-            }
-            
-
-            if (state == State.NotFishing && this.fishing == false)
-            {
-                var SpellSlot = Functions.FindSlotBySpellId(fishingspell, false);
-                Functions.CastSpellBySlot(SpellSlot, player.TargetGuidPtr);
-                this.fishing = true;
-                state = State.Fishing;
-            }
-
-
-            if (gameObject == null)
-            {
-                if (state == State.Fishing && Wait.For("DelayForSpell", 500))
-                {
-                    ObjectManager.TraverseObjectManager();
-                    gameObject = ObjectManager.GameObjects.FirstOrDefault(u => u.Creator.isEqualTo(player.Guid) && u.Name == "鱼漂");
-                }
-            }
-
-            if (gameObject != null)
-            {
-                
-                Animating = gameObject.Animating;
-                //Console.WriteLine("Animating:{0}", Animating);
-                if (Animating != 0)
-                {
-                    var ret = Functions.GameUIOnSpriteRightClick(gameObject.GuidPtr);
-                    state = State.ReadyToPop;
-                }
-            }
-            //if(state ==State.ReadyToPop) Console.WriteLine("state:{0}, Count:{1}", state, Wait.Count());
-            if (state == State.ReadyToPop && Wait.For("LootItemsDelay", 2000))
-            {
-                //Console.WriteLine("pop state");
-                Wait.RemoveAll();
-                botStates.Pop();
-            }
-
-            if (state == State.Fishing && player.ChanID != fishingspell && gameObject != null)
-            {
-                //Console.WriteLine("pop state2");
-                Wait.RemoveAll();
-                botStates.Pop();
-            }
-        }
-
-        int GetFishingLevel()
-        {
-            if (ThreadSynchronizer.RunOnMainThread(() => Functions.IsSpellKnow((int)FishingLevels.master, false)))
-            {
-                return (int)FishingLevels.master;
-            }
-            else if (ThreadSynchronizer.RunOnMainThread(() => Functions.IsSpellKnow((int)FishingLevels.artisan, false)))
-            {
-                return (int)FishingLevels.artisan;
-            }
-            else if (ThreadSynchronizer.RunOnMainThread(() => Functions.IsSpellKnow((int)FishingLevels.expert, false)))
-            {
-                return (int)FishingLevels.expert;
-            }
-            else if (ThreadSynchronizer.RunOnMainThread(() => Functions.IsSpellKnow((int)FishingLevels.journeyman, false)))
-            {
-                return (int)FishingLevels.journeyman;
-            }
-            else if (ThreadSynchronizer.RunOnMainThread(() => Functions.IsSpellKnow((int)FishingLevels.apprentice, false)))
-            {
-                return (int)FishingLevels.apprentice;
-            }
-            else
-            {
-                return (int)FishingLevels.apprentice;
-            }
-        }
-
-        async void Fishing(WoWGameObject gameObject, LocalPlayer player, int SpellId, bool fishing)
-        {
-            while (fishing)
-            {
-                try
-                {
-                    Console.WriteLine("ChanID:{0}", player.ChanID);
-                    if (player.ChanID == SpellId)
-                    {
-                        fishing = true;
-                    }
-                    else
-                    {
-                        fishing = false;
-                        return;
-                    }
-                    Animating = gameObject.Animating;
-                    if (Animating != 0)
-                    {
-                        var ret = Functions.GameUIOnSpriteRightClick(gameObject.GuidPtr);
-                        fishing = false;
-                        return;
-                    }
-                    await Task.Delay(100);
-                }
-                catch (Exception e)
-                {
-                    //Logger.Log(e + "\n");
-                }
-            }
-        }
-
-        enum State
-        {
-            Uninitialized,
-            Fishing,
-            NotFishing,
-            Looting,
-            ReadyToPop,
-        }
-    }
-
-    class FaceTo : IBotState
-    {
-        readonly Stack<IBotState> botStates;
-        //readonly IDependencyContainer container;
-        readonly LocalPlayer player;
-        readonly ActionList actionList;
-
-        public FaceTo(Stack<IBotState> botStates, ActionList actionList)
-        {
-            this.botStates = botStates;
-            this.actionList = actionList;
-            player = ObjectManager.Player;
-        }
-
-        public void Update()
-        {
-            if (player.MoveFlag > 0) return;
-            
-            float facing = (float)1.6;
-
-            if( player.RotationF != facing)
-            {
-                Functions.FaceTo(player.EntPtr, (float)1.6);
-            }else
-            {
-                botStates.Pop();
-                actionList.ActionIndex = actionList.nextactionIndexList.ElementAt(actionList.ActionIndex);
-                return;
-            }
-        }
-
-
-
-    }
-
-
-    public enum FishingLevels : int
-    {
-        apprentice = 7620,
-        journeyman = 7731,
-        expert = 7732,
-        artisan = 18248,
-        master = 33095
-    }
 }

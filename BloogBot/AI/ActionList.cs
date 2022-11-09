@@ -4,22 +4,25 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BloogBot.Game;
+using Newtonsoft.Json;
 
 namespace BloogBot.AI
 {
+    [Serializable()]
     public class ActionList
     {
-        public readonly IList<Position> waypoints;
-        public readonly IList<int> actionIndexList;
-        public readonly IList<int> nextactionIndexList;
+        public readonly List<Position> Waypoints;
+        public readonly List<int> ActionIndexList;
+        public readonly List<int> NextActionIndexList;
+        public readonly List<Func<Stack<IBotState>, ActionList, IBotState>> StateStack;
 
-        public ActionList(IList<Position> waypoints, IList<int> actionIndexList, IList<int> nextactionIndexList)
+        public ActionList(List<Position> waypoints, List<int> actionIndexList, List<int> nextActionIndexList, List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack)
         {
-            this.waypoints = waypoints;
-            this.actionIndexList = actionIndexList;
-            this.nextactionIndexList = nextactionIndexList;
+            this.Waypoints = waypoints;
+            this.ActionIndexList = actionIndexList;
+            this.NextActionIndexList = nextActionIndexList;
+            this.StateStack = stateStack;
         }
-
         public int ActionIndex { get; set; }
         
     }

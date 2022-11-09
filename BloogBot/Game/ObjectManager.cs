@@ -1,6 +1,7 @@
 ﻿using BloogBot.Game.Enums;
 using BloogBot.Game.Objects;
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -16,6 +17,8 @@ namespace BloogBot.Game
 
         internal static IList<WoWObject> Objects = new List<WoWObject>();
         static internal IList<WoWObject> ObjectsBuffer = new List<WoWObject>();
+
+        internal static Dictionary<CGGuid, string> PlayerNames = new Dictionary<CGGuid, string>();
 
         static public LocalPlayer Player { get; private set; }
 
@@ -33,18 +36,13 @@ namespace BloogBot.Game
 
         public static bool IsLoggedIn => MemoryManager.ReadByte(MemoryAddresses.MemBase + Offsets.InWorld) > 0;
 
-        public static void GetTargetGuid(CGGuid targetGuid)
-        {
-            targetGuid.low = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Target_Guid));
-            targetGuid.high = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Target_Guid) + 0x8);
-        }
-
         static internal async void StartTraverseObjMgr()
         {
             while (true)
             {
                 try
                 {
+                    TraverseNameManager();
                     TraverseObjectManager();
                     await Task.Delay(200);
                 }
@@ -55,17 +53,17 @@ namespace BloogBot.Game
             }
         }
 
-        public static IntPtr CurMgr = MemoryManager.ReadIntPtr(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Object_Manager.Base));
-        public static Int32 Count = MemoryManager.ReadInt(CurMgr);
-        public static IntPtr ArrayAddr = MemoryManager.ReadIntPtr(IntPtr.Add(CurMgr, Offsets.array));
+        
         internal static void TraverseObjectManager()
         {
             if (IsLoggedIn)
             {
+                IntPtr ObjMgr = MemoryManager.ReadIntPtr(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Object_Manager.Base));
+                int Count = MemoryManager.ReadInt(ObjMgr);
+                IntPtr ArrayAddr = MemoryManager.ReadIntPtr(IntPtr.Add(ObjMgr, Offsets.array));
                 CGGuid guid;
                 IntPtr entryPtr;
-                playerGuid.low = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Player_Guid));
-                playerGuid.high = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Player_Guid) + 0x8);
+                playerGuid = MemoryManager.ReadGuid(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Player_Guid));
                 
                 // here we traverse objects
                 for (int i = 0; i < Count; i++)
@@ -75,8 +73,7 @@ namespace BloogBot.Game
                     while (ptr != IntPtr.Zero)
                     {
                         entryPtr = MemoryManager.ReadIntPtr(IntPtr.Add(ptr, Offsets.entptr));
-                        guid.low = MemoryManager.ReadUlong(IntPtr.Add(entryPtr, Offsets.objGuid));
-                        guid.high = MemoryManager.ReadUlong(IntPtr.Add(entryPtr, Offsets.objGuid) + 0x8);
+                        guid = MemoryManager.ReadGuid(IntPtr.Add(entryPtr, Offsets.objGuid));
                         var objectType = (ObjectType)MemoryManager.ReadByte(entryPtr + Offsets.objType);
 
                         try
@@ -133,6 +130,44 @@ namespace BloogBot.Game
                     // TODO
                     //Player.RefreshSpells();
                     //UpdateProbe();
+                }
+            }
+        }
+
+        internal static void TraverseNameManager()
+        {
+            if (IsLoggedIn)
+            {
+                try
+                {
+                    CGGuid guid;
+                    IntPtr NameEntry;
+                    string Name;
+
+                    var NameMgr = IntPtr.Add(MemoryAddresses.MemBase, Offsets.Object_Manager.Names);
+                    var NameCount = MemoryManager.ReadInt(IntPtr.Add(NameMgr, Offsets.nameCount));
+                    var NameArrayAddr = MemoryManager.ReadIntPtr(IntPtr.Add(NameMgr, Offsets.nameArrayAddr));
+                    if (NameCount <= 0) return;
+                    // here we traverse objects
+                    for (int i = 0; i < NameCount; i++)
+                    {
+                        NameEntry = MemoryManager.ReadIntPtr(IntPtr.Add(NameArrayAddr, i * Offsets.nameArray));
+                        if (NameEntry == IntPtr.Zero) continue;
+                        do
+                        {
+                            guid = MemoryManager.ReadGuid(IntPtr.Add(NameEntry, Offsets.nameGuid));
+                            Name = MemoryManager.ReadStringName(IntPtr.Add(NameEntry, Offsets.nameName), Encoding.UTF8);
+                            if (guid.isEmpty() || string.IsNullOrEmpty(Name)) continue;
+                            if (!PlayerNames.ContainsKey(guid))
+                                PlayerNames.Add(guid, Name);
+
+                            NameEntry = MemoryManager.ReadIntPtr(NameEntry + 0x0);
+                        } while (NameEntry != IntPtr.Zero);
+                    }
+                }
+                catch (Exception e)
+                {
+                    //return false;
                 }
             }
         }

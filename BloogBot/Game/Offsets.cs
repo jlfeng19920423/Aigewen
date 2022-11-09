@@ -194,6 +194,12 @@ namespace BloogBot.Game
         public const int objGuid = 0x18;
         public const int entptr = 0x18;
         public const int objType = 0x10;
+        public const int nameCount = 0x18;  // [BaseAddress + NameCacheBase + NameCount]
+        public const int nameMaxCount = 0x38;  // [BaseAddress + NameCacheBase + nameMaxCount]
+        public const int nameArrayAddr = 0x10;  // [BaseAddress + NameCacheBase + NameArray]
+        public const int nameArray = 0x8;
+        public const int nameGuid = 0x8;
+        public const int nameName = 0x19;
         public const int CorpsePositionOffset = 0x40;
         public const int ChatHistoryNextOffset = 0xCB8;
         public const int ChatHistorySenderGuid = 0x0;  //checked
@@ -201,6 +207,14 @@ namespace BloogBot.Game
         public const int ChatHistoryFullMessage = 0xE6; //checked
         public const int ChatHistoryChatType = 0xCA0;  //checked
         public const int ChatHistoryChannelNum = 0xCA4;
+        public const int ItemStackCount = 0x1D0;
+        public const int ItemFlags = 0x1D8;
+        public const int ItemDurability = 0x1E4;
+        public const int ItemMaxDurability = 0x1E8;
+        public const int ItemEnchantment = 0x2DC;
+        public const int ItemEnchantmentOffset = 0xC;
+        public const int ItemContainedIn = 0x1A0;
+        public const int ItemOwner = 0x190;
 
         public static int FuncAccessAuraoffset = 0x134D9C0;
         public static int FuncAccessHealth = 0x14293A0;
@@ -290,5 +304,10 @@ namespace BloogBot.Game
         public static int ChatHistoryInitialized = 0x30A03B0;
         public static int ChatHistory = 0x3070870;
         public static int ChatHistoryCurrentIndex = 0x307086C;
+        public static int NameCacheBase = 0x2BEB418;
+        public static int ItemUseParam = 0x300A070;
+        public static int GameUICursorItem = 0x306EF48;
+        public static int GameUICursorItemContainer = 0x306EF58;
+        public static int GameUICursorItemSlot = 0x306EF68;
     }
 }

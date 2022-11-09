@@ -106,7 +106,7 @@ namespace BloogBot.Game
         {
             RetrieveCorpseFunction();
         }
-        //end of AcceptResurrect 
+        //end of AcceptResurrect (tested)
 
         //ReleaseCorpse: release the corpse 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]

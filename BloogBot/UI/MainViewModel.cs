@@ -14,7 +14,6 @@ using System.Diagnostics;
 using System.Linq;
 using BloogBot.Game.Objects;
 using BloogBot.AI;
-using BloogBot.Bots;
 using System.Threading.Tasks;
 
 namespace BloogBot.UI
@@ -38,12 +37,9 @@ namespace BloogBot.UI
             }
             probe = new Probe(callback, killswitch);
             */
-            
-            TravelPathGenerator.Initialize(() =>
-            {
-                OnPropertyChanged(nameof(SaveTravelPathCommandEnabled));
-            });
-            //InitializeTravelPaths();
+
+            currentBot = botLoader.ReloadBot();
+            currentFunc = funcLoader.ReloadFuncTest();
         }
 
         public ObservableCollection<TravelPath> TravelPaths { get; private set; }
@@ -62,16 +58,9 @@ namespace BloogBot.UI
 
         public void InitializeObjectManager()
         {
-            //ObjectManager.StartTraverseObjMgr();
+            ObjectManager.StartTraverseObjMgr();
         }
 
-        void InitializeTravelPaths()
-        {
-            TravelPaths = new ObservableCollection<TravelPath>(Repository.ListTravelPaths());
-            TravelPaths.Insert(0, null);
-            OnPropertyChanged(nameof(CurrentTravelPath));
-            OnPropertyChanged(nameof(TravelPaths));
-        }
 
         void UpdatePropertiesWithAttribute(Type type)
         {
@@ -109,7 +98,6 @@ namespace BloogBot.UI
         
         unsafe void Spell()
         {
-            ObjectManager.TraverseObjectManager();
             LocalPlayer player = ObjectManager.Player;
             WoWUnit Target = ObjectManager.Units.FirstOrDefault(u => u.Guid.isEqualTo(player.TargetGuid));
             if (Target != null)
@@ -151,7 +139,6 @@ namespace BloogBot.UI
         IntPtr pUnit = IntPtr.Zero;
         void CTMTarget()
         {
-            ObjectManager.TraverseObjectManager();
             pUnit = IntPtr.Zero;
             var CurMgr = MemoryManager.ReadIntPtr(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Object_Manager.Base));
             var Count = MemoryManager.ReadInt(CurMgr);
@@ -254,11 +241,15 @@ namespace BloogBot.UI
         }
         void FuncTest()
         {
-            ObjectManager.TraverseObjectManager();
-            LocalPlayer player = ObjectManager.Player;
-            
-            ThreadSynchronizer.RunOnMainThread(() => Functions.FaceTo(player.EntPtr,(float)1.6));
+            try 
+            {
+                currentFunc.FuncTest(SpellId, Log);
 
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e + "\n");
+            }
         }
 
         IntPtr BobberEntryPtr = IntPtr.Zero;
@@ -266,31 +257,16 @@ namespace BloogBot.UI
         byte ret = 0;
         void GetTargetEnt()
         {
-            CGGuid lastTargetGuid;
-            lastTargetGuid = MemoryManager.ReadGuid(IntPtr.Add(MemoryAddresses.MemBase, Offsets.LastTargetGuid));
-            LocalPlayer player = ObjectManager.Player;
-            WoWUnit Target = ObjectManager.Units.FirstOrDefault(u => u.Guid.isEqualTo(player.TargetGuid));
-            WoWPlayer Players = ObjectManager.Players.FirstOrDefault(u => u.Guid.isEqualTo(player.TargetGuid));
-            WoWUnit LastTarget = ObjectManager.Units.FirstOrDefault(u => u.Guid.isEqualTo(player.LastTargetGuid));
-            Log($"GameBase:0x{MemoryAddresses.MemBase.ToString("X2")}\t PlayerGuid:{player.Guid.high}{player.Guid.low}");
-            Log($"CorpsePosition:({player.CorpsePosition.X},{player.CorpsePosition.Y},{player.CorpsePosition.Z})");
-            if (Target != null)
+            try
             {
-                Log($"TargetEntPtr:0x{Target.EntPtr.ToString("X2")}\tPlayerEntPtr:0x{player.EntPtr.ToString("X2")}\tTargetGuid:{Target.Guid.high}{Target.Guid.low}");
-                //Log($"Health:{Target.Health}\tMaxHealth:{Target.MaxHealth}\tLevel:{Target.Level}\t");
-                //Log($"Name:{Target.Name}\tSex:{Target.Sex}\tRace:{Target.Race}\tTargetGuid:{Target.TargetGuid.high}{Target.TargetGuid.low}");
-                //Log($"Position:{Target.UnitPosition.X},{Target.UnitPosition.Y},{Target.UnitPosition.Z}\tRotationD:{Target.RotationD}\tRotationF:{Target.RotationF}\tPitch:{Target.Pitch}");
-                //Log($"Flag1:{Target.UnitFlag1}\tFlag2:{Target.UnitFlag2}\tFlag3:{Target.UnitFlag3}\tDynamicFlag:{Target.DynamicFlag}");
+                currentFunc.GetTargetEnt(Log);
+
             }
-            if (Players != null)
+            catch (Exception e)
             {
-                Log($"PlayersEntPtr:0x{Players.EntPtr.ToString("X2")}\tPlayersGuid:{Players.Guid.high}{Players.Guid.low}");
-                Log($"ChanId:{Players.ChanID}\t");
-                //Log($"Name:{Players.Name}\tSex:{Players.Sex}\tRace:{Players.Race}\tTargetGuid:{Players.TargetGuid.high}{Players.TargetGuid.low}");
-                //Log($"Position:{Players.UnitPosition.X},{Players.UnitPosition.Y},{Players.UnitPosition.Z}\tRotationD:{Players.RotationD}\tRotationF:{Players.RotationF}\tPitch:{Players.Pitch}");
-                //Log($"Flag1:{Players.UnitFlag1}\tFlag2:{Players.UnitFlag2}\tFlag3:{Players.UnitFlag3}\tDynamicFlag:{Players.DynamicFlag}");
+                //Logger.Log(e + "\n");
             }
-            Log($"LastTargetGuid:{lastTargetGuid.high}{lastTargetGuid.low}");
+
         }
 
         
@@ -301,8 +277,7 @@ namespace BloogBot.UI
             var ArrayAddr = MemoryManager.ReadIntPtr(IntPtr.Add(CurMgr, array));
             var PlayerGuid1 = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Player_Guid));
             var PlayerGuid2 = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Player_Guid) + 0x8);
-            var TargetGuid1 = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Target_Guid));
-            var TargetGuid2 = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Target_Guid) + 0x8);
+            var TargetGuid = MemoryManager.ReadGuid(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Target_Guid));
             var FocusGuid = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Focus_Guid));
             var LastTargetGuid = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Last_Target_Guid));
             Log($"测试：PlayerGuid:{PlayerGuid2.ToString("X2")}{PlayerGuid1.ToString("X2")}\t");
@@ -328,7 +303,7 @@ namespace BloogBot.UI
                     
                     /* target properties */
                     
-                    if (guid1 == TargetGuid1 && guid2 == TargetGuid2 && type == ObjectType.Unit)//info for Unit
+                    if (guid1 == TargetGuid.low && guid2 == TargetGuid.high && type == ObjectType.Unit)//info for Unit
                     {
                         var level = MemoryManager.ReadInt(IntPtr.Add(entryPtr, Fields.Unit.Level));  //correct
                         var health = MemoryManager.ReadInt(IntPtr.Add(entryPtr, Fields.Unit.Health)); //correct
@@ -342,7 +317,7 @@ namespace BloogBot.UI
                         Log($"i:{i}\t n:{n}\t type:{type}\t ptr:0x{ptr.ToString("X2")} \t Entry:0x{entryPtr.ToString("X2")} \t TargetGuid:{guid2.ToString("X2")}{guid1.ToString("X2")}\t type:{type}\tlevel:{level}\t Health:{health}\t name:{nameUnit}\t X:{UnitX}\t Y:{UnitY}\t Z:{UnitZ}");
                     }
                     
-                    if (guid1 == TargetGuid1 && guid2 == TargetGuid2 && type == ObjectType.Player)//info for player
+                    if (guid1 == TargetGuid.low && guid2 == TargetGuid.high && type == ObjectType.Player)//info for player
                     {
                         var namePtr = MemoryManager.ReadIntPtr(IntPtr.Add(entryPtr, Fields.Object.Name1));   //correct
                         //var namePlayer = MemoryManager.ReadStringName(namePtr+Fields.Object.Name2, Encoding.UTF8);
@@ -364,53 +339,8 @@ namespace BloogBot.UI
                     ptr = MemoryManager.ReadIntPtr(IntPtr.Add(ptr, 0x0));
                 }
             }
-            /*
-            for (int i = 0; i < Count; i++)
-            {
-                var ptr = MemoryManager.ReadIntPtr(IntPtr.Add(ArrayAddr, i * array));
-                if (ptr == IntPtr.Zero) continue;
-                int n = 0;
-                while (ptr != IntPtr.Zero)
-                {
-                    var entryPtr = MemoryManager.ReadIntPtr(IntPtr.Add(ptr, entGuid));
-                    var guid1 = MemoryManager.ReadUlong(IntPtr.Add(ptr, objGuid));
-                    var guid2 = MemoryManager.ReadUlong(IntPtr.Add(ptr, objGuid) + 0x8);
-                    var type = (ObjectType)MemoryManager.ReadByte(entryPtr + objType);
- 
-                    if (type == ObjectType.GameObject)
-                    {
-                        var ObjCreatorGuid1 = MemoryManager.ReadUlong(IntPtr.Add(entryPtr, 0x210));
-                        var ObjCreatorGuid2 = MemoryManager.ReadUlong(IntPtr.Add(entryPtr, 0x210) + 0x8);
-                        var AnimateState = MemoryManager.ReadByte(IntPtr.Add(entryPtr, 0xA0));
-                        //var ObjID = MemoryManager.ReadStringName(IntPtr.Add(entryPtr, Fields.Object.ObjectID), Encoding.UTF8);
-                        //Log($"type:{type}\t Entry:0x{entryPtr.ToString("X2")}\t  CreatorGuid:{ObjCreatorGuid2}{ObjCreatorGuid1}\t AnimateState:{AnimateState}");
 
-                        if (ObjCreatorGuid1 == LocalPlayerGuid1 && ObjCreatorGuid2 == LocalPlayerGuid2 && ObjCreatorGuid1 != 0 && ObjCreatorGuid2 != 0)
-                        {
-                            BobberEntryPtr = entryPtr;
-                            Log($"type:{type}\t Entry:0x{entryPtr.ToString("X2")}\t  PlayerGuid:{ObjCreatorGuid2}{ObjCreatorGuid1}");
-                        }
-                    }
-                    ptr = MemoryManager.ReadIntPtr(IntPtr.Add(ptr, 0x0));
-                }
-            }
-            if (BobberEntryPtr != IntPtr.Zero)
-            {
-                do
-                {
-                    Animating = MemoryManager.ReadByte(IntPtr.Add(BobberEntryPtr, 0xA0));
-                    if (Animating != 0)
-                    {
-                        SpellSlot = 8;
-                        var re2 = ThreadSynchronizer.RunOnMainThread(() => Functions.CastSpellBySlot(SpellSlot, IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Player_Guid)));
-                        Log($"AnimateState:{Animating}");
-                        break;
-                    }
-                    ret += 1;
-                    Thread.Sleep(50);
-                } while (ret < 400);
-            }
-            */
+            
         }
 
 
@@ -428,24 +358,46 @@ namespace BloogBot.UI
         public ICommand FuncTestCommand =>
             funcTestCommand ?? (funcTestCommand = new CommandHandler(FuncTest, true));
 
-        IBot currentBot = new FishingBot();
+        ICommand reloadFuncCommand;
+        public ICommand ReloadFuncCommand =>
+            reloadFuncCommand ?? (reloadFuncCommand = new CommandHandler(ReloadFunc, true));
+
+        IFuncTest currentFunc;
+        readonly FuncTestLoader funcLoader = new FuncTestLoader();
+        void ReloadFunc()
+        {
+            try
+            {
+                currentFunc = funcLoader.ReloadFuncTest();
+                Log("FuncTest successfully loaded!");
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e);
+                //Log(COMMAND_ERROR);
+            }
+        }
 
 
-        ActionList actionList = FishingBot.actionList;
-        List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack = FishingBot.stateStack;
+
+
+        /// <summary>
+        /// Tab:Overview
+        /// </summary>
+        IBot currentBot;
+        readonly BotLoader botLoader = new BotLoader();
 
         public bool StartCommandEnabled => !currentBot.Running();
 
         public bool StopCommandEnabled => currentBot.Running();
 
+        //Start command
         ICommand startCommand;
-
         void UiStart()
         {
             Start();
             Log("Bot started!");
         }
-
         void Start()
         {
             try
@@ -459,21 +411,21 @@ namespace BloogBot.UI
                     OnPropertyChanged(nameof(StartCommandEnabled));
                     OnPropertyChanged(nameof(StopCommandEnabled));
                     //OnPropertyChanged(nameof(StartPowerlevelCommandEnabled));
-                    OnPropertyChanged(nameof(StartTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(StopTravelPathCommandEnabled));
+                    //OnPropertyChanged(nameof(StartTravelPathCommandEnabled));
+                    //OnPropertyChanged(nameof(StopTravelPathCommandEnabled));
                     //OnPropertyChanged(nameof(ReloadBotsCommandEnabled));
                     //OnPropertyChanged(nameof(CurrentBotEnabled));
                     //OnPropertyChanged(nameof(GrindingHotspotEnabled));
                     OnPropertyChanged(nameof(CurrentTravelPathEnabled));
                 }
 
-                currentBot.Start(stateStack, actionList, stopCallback);
+                currentBot.Start(currentBot.actionList, stopCallback);
 
                 OnPropertyChanged(nameof(StartCommandEnabled));
                 OnPropertyChanged(nameof(StopCommandEnabled));
                 //OnPropertyChanged(nameof(StartPowerlevelCommandEnabled));
-                OnPropertyChanged(nameof(StartTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(StopTravelPathCommandEnabled));
+                //OnPropertyChanged(nameof(StartTravelPathCommandEnabled));
+                //OnPropertyChanged(nameof(StopTravelPathCommandEnabled));
                 //OnPropertyChanged(nameof(ReloadBotsCommandEnabled));
                 //OnPropertyChanged(nameof(CurrentBotEnabled));
                 //OnPropertyChanged(nameof(GrindingHotspotEnabled));
@@ -485,19 +437,16 @@ namespace BloogBot.UI
                 //Log(COMMAND_ERROR);
             }
         }
-
         public ICommand StartCommand =>
             startCommand ?? (startCommand = new CommandHandler(UiStart, true));
 
         // Stop command
         ICommand stopCommand;
-
         void UiStop()
         {
             Stop();
             Log("Bot stopped!");
         }
-
         void Stop()
         {
             try
@@ -509,8 +458,8 @@ namespace BloogBot.UI
                 OnPropertyChanged(nameof(StartCommandEnabled));
                 OnPropertyChanged(nameof(StopCommandEnabled));
                 //OnPropertyChanged(nameof(StartPowerlevelCommandEnabled));
-                OnPropertyChanged(nameof(StartTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(StopTravelPathCommandEnabled));
+                //OnPropertyChanged(nameof(StartTravelPathCommandEnabled));
+                //OnPropertyChanged(nameof(StopTravelPathCommandEnabled));
                 //OnPropertyChanged(nameof(ReloadBotsCommandEnabled));
                 //OnPropertyChanged(nameof(CurrentBotEnabled));
                 //OnPropertyChanged(nameof(GrindingHotspotEnabled));
@@ -521,78 +470,144 @@ namespace BloogBot.UI
                 //Logger.Log(e);
             }
         }
-
         public ICommand StopCommand =>
             stopCommand ?? (stopCommand = new CommandHandler(UiStop, true));
-
-
         
+        //reloadbot command
+        ICommand reloadBotsCommand;
+        void ReloadBots()
+        {
+            try
+            {
+                currentBot = botLoader.ReloadBot();
+
+                //OnPropertyChanged(nameof(Bots));
+                OnPropertyChanged(nameof(StartCommandEnabled));
+                OnPropertyChanged(nameof(StopCommandEnabled));
+                //OnPropertyChanged(nameof(StartPowerlevelCommandEnabled));
+                //OnPropertyChanged(nameof(ReloadBotsCommandEnabled));
+
+                Log("Bot successfully loaded!");
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e);
+                //Log(COMMAND_ERROR);
+            }
+        }
+
+        public ICommand ReloadBotsCommand =>
+            reloadBotsCommand ?? (reloadBotsCommand = new CommandHandler(ReloadBots, true));
+
+
+        /// <summary>
+        /// Tab: ActionList
+        /// </summary>
+
+        string newActionListName;
+        public string NewActionListName
+        {
+            get => newActionListName;
+            set
+            {
+                newActionListName = value;
+                OnPropertyChanged(nameof(NewActionListName));
+            }
+        }
+        int actionIndex;
+        public int ActionIndex
+        {
+            get => actionIndex;
+            set
+            {
+                actionIndex = value;
+                OnPropertyChanged(nameof(ActionIndex));
+            }
+        }
+        int nextActionIndex;
+        public int NextActionIndex
+        {
+            get => nextActionIndex;
+            set
+            {
+                nextActionIndex = value;
+                OnPropertyChanged(nameof(NextActionIndex));
+            }
+        }
+
+        string actionName;
+        public string ActionName
+        {
+            get => actionName;
+            set
+            {
+                actionName = value;
+                OnPropertyChanged(nameof(ActionName));
+            }
+        }
         
-
-        [BotSetting]
-        public TravelPath CurrentTravelPath
+        int insertActionIndex;
+        public int InsertActionIndex
         {
-            get => botSettings.CurrentTravelPath;
+            get => insertActionIndex;
             set
             {
-                botSettings.CurrentTravelPath = value;
-                OnPropertyChanged(nameof(CurrentTravelPath));
-                OnPropertyChanged(nameof(StartTravelPathCommandEnabled));
+                insertActionIndex = value;
+                OnPropertyChanged(nameof(InsertActionIndex));
             }
         }
 
-        bool reverseTravelPath;
-        public bool ReverseTravelPath
+        int insertPositionIndex;
+        public int InsertPositionIndex
         {
-            get => reverseTravelPath;
+            get => insertPositionIndex;
             set
             {
-                reverseTravelPath = value;
-                OnPropertyChanged(nameof(ReverseTravelPath));
+                insertPositionIndex = value;
+                OnPropertyChanged(nameof(InsertPositionIndex));
             }
         }
-        public bool StartRecordingTravelPathCommandEnabled => !TravelPathGenerator.Recording;
-        string newTravelPathName;
-        public string NewTravelPathName
+
+        int eraseActionIndex;
+        public int EraseActionIndex
         {
-            get => newTravelPathName;
+            get => eraseActionIndex;
             set
             {
-                newTravelPathName = value;
-                OnPropertyChanged(nameof(NewTravelPathName));
+                eraseActionIndex = value;
+                OnPropertyChanged(nameof(EraseActionIndex));
             }
         }
-        public bool SaveTravelPathCommandEnabled =>
-            TravelPathGenerator.Recording &&
-            TravelPathGenerator.PositionCount > 0 &&
-            !string.IsNullOrWhiteSpace(newTravelPathName);
-        public bool CancelTravelPathCommandEnabled => TravelPathGenerator.Recording;
-        public bool StartTravelPathCommandEnabled =>
-            !currentBot.Running() &&
-            CurrentTravelPath != null;
-        public bool StopTravelPathCommandEnabled => currentBot.Running();
+
+
+        const string BOT_PATH = @"C:\Users\tommy\Documents\GitHub\Aigewen\bin\Debug\Debug\net6.0\FishingBot.dll";
 
         public bool CurrentTravelPathEnabled => !currentBot.Running();
 
-        ICommand startRecordingTravelPathCommand;
-
-        void StartRecordingTravelPath()
+        ICommand startRecordingActionListCommand;
+        public ICommand StartRecordingActionListCommand =>
+            startRecordingActionListCommand ?? (startRecordingActionListCommand = new CommandHandler(StartRecordingActionList, true));
+        public bool StartRecordingActionListCommandEnabled => !ActionListGenerator.Recording;
+        void StartRecordingActionList()
         {
             try
             {
                 var isLoggedIn = ObjectManager.IsLoggedIn;
                 if (isLoggedIn)
                 {
-                    TravelPathGenerator.StartRecord(ObjectManager.Player);
+                    ActionListGenerator.StartRecord(ObjectManager.Player);
 
-                    OnPropertyChanged(nameof(StartRecordingTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(RecordTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(EraseTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(ListPathCommandEnabled));
-                    OnPropertyChanged(nameof(SaveTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(CancelTravelPathCommandEnabled));
+                    OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                    OnPropertyChanged(nameof(AddActionCommandEnabled));
+                    OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                    OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                    OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                    OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                    OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                    OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
-                    Log("Start Record new travel path...");
+                    Log("Start Record new action list...");
 
                 }
                 else
@@ -605,32 +620,33 @@ namespace BloogBot.UI
             }
         }
 
-        public ICommand StartRecordingTravelPathCommand =>
-            startRecordingTravelPathCommand ?? (startRecordingTravelPathCommand = new CommandHandler(StartRecordingTravelPath, true));
 
-        public bool RecordTravelPathCommandEnabled => TravelPathGenerator.Recording;
-
-        ICommand recordTravelPathCommand;
-
-        void RecordTravelPath()
+        ICommand addActionCommand;
+        public ICommand AddActionCommand =>
+            addActionCommand ?? (addActionCommand = new CommandHandler(AddAction, true));
+        public bool AddActionCommandEnabled => ActionListGenerator.Recording;
+        void AddAction()
         {
             try
             {
                 var isLoggedIn = ObjectManager.IsLoggedIn;
                 if (isLoggedIn)
                 {
-                    TravelPathGenerator.Record(ObjectManager.Player, Log);
+                    ActionListGenerator.AddAction(ObjectManager.Player, Log, actionName);
 
-                    OnPropertyChanged(nameof(StartRecordingTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(RecordTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(EraseTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(ListPathCommandEnabled));
-                    OnPropertyChanged(nameof(SaveTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(CancelTravelPathCommandEnabled));
+                    OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                    OnPropertyChanged(nameof(AddActionCommandEnabled));
+                    OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                    OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                    OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                    OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                    OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                    OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
                 }
                 else
-                    Log("Record failed. Not logged in.");
+                    Log("AddAction failed. Not logged in.");
             }
             catch (Exception e)
             {
@@ -639,32 +655,32 @@ namespace BloogBot.UI
             }
         }
 
-        public ICommand EraseTravelPathCommand =>
-            eraseTravelPathCommand ?? (eraseTravelPathCommand = new CommandHandler(EraseTravelPath, true));
-
-        public bool EraseTravelPathCommandEnabled => TravelPathGenerator.Recording;
-
-        ICommand eraseTravelPathCommand;
-
-        void EraseTravelPath()
+        ICommand insertActionAtCommand;
+        public ICommand InsertActionAtCommand =>
+            insertActionAtCommand ?? (insertActionAtCommand = new CommandHandler(InsertActionAt, true));
+        public bool InsertActionAtCommandEnabled => ActionListGenerator.Recording;
+        void InsertActionAt()
         {
             try
             {
                 var isLoggedIn = ObjectManager.IsLoggedIn;
                 if (isLoggedIn)
                 {
-                    TravelPathGenerator.Erase(ObjectManager.Player, Log);
+                    ActionListGenerator.InsertActionAt(ObjectManager.Player, Log, insertActionIndex, actionName);
 
-                    OnPropertyChanged(nameof(StartRecordingTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(RecordTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(EraseTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(ListPathCommandEnabled));
-                    OnPropertyChanged(nameof(SaveTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(CancelTravelPathCommandEnabled));
+                    OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                    OnPropertyChanged(nameof(AddActionCommandEnabled));
+                    OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                    OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                    OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                    OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                    OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                    OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
                 }
                 else
-                    Log("Record failed. Not logged in.");
+                    Log("AddAction failed. Not logged in.");
             }
             catch (Exception e)
             {
@@ -673,32 +689,68 @@ namespace BloogBot.UI
             }
         }
 
-        public ICommand ListPathCommand =>
-            listPathCommand ?? (listPathCommand = new CommandHandler(ListPath, true));
 
-        public bool ListPathCommandEnabled => TravelPathGenerator.Recording;
 
-        ICommand listPathCommand;
-
-        void ListPath()
+        ICommand addPositionCommand;
+        public ICommand AddPositionCommand =>
+            addPositionCommand ?? (addPositionCommand = new CommandHandler(AddPosition, true));
+        public bool AddPositionCommandEnabled => ActionListGenerator.Recording;
+        void AddPosition()
         {
             try
             {
                 var isLoggedIn = ObjectManager.IsLoggedIn;
                 if (isLoggedIn)
                 {
-                    TravelPathGenerator.ListPath(ObjectManager.Player, Log);
+                    ActionListGenerator.AddPosition(ObjectManager.Player, Log, actionName);
 
-                    OnPropertyChanged(nameof(StartRecordingTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(RecordTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(EraseTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(ListPathCommandEnabled));
-                    OnPropertyChanged(nameof(SaveTravelPathCommandEnabled));
-                    OnPropertyChanged(nameof(CancelTravelPathCommandEnabled));
+                    OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                    OnPropertyChanged(nameof(AddActionCommandEnabled));
+                    OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                    OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                    OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                    OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                    OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                    OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
                 }
                 else
-                    Log("List Path failed. Not logged in.");
+                    Log("AddPosition failed. Not logged in.");
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e);
+                //Log(COMMAND_ERROR);
+            }
+        }
+
+        ICommand insertPositionAtCommand;
+        public ICommand InsertPositionAtCommand =>
+            insertPositionAtCommand ?? (insertPositionAtCommand = new CommandHandler(InsertPositionAt, true));
+        public bool InsertPositionAtCommandEnabled => ActionListGenerator.Recording;
+        void InsertPositionAt()
+        {
+            try
+            {
+                var isLoggedIn = ObjectManager.IsLoggedIn;
+                if (isLoggedIn)
+                {
+                    ActionListGenerator.InsertPositionAt(ObjectManager.Player, Log, insertPositionIndex);
+
+                    OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                    OnPropertyChanged(nameof(AddActionCommandEnabled));
+                    OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                    OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                    OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                    OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                    OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                    OnPropertyChanged(nameof(CancelActionListCommandEnabled));
+
+                }
+                else
+                    Log("AddAction failed. Not logged in.");
             }
             catch (Exception e)
             {
@@ -708,26 +760,33 @@ namespace BloogBot.UI
         }
 
 
-        public ICommand RecordTravelPathCommand =>
-            recordTravelPathCommand ?? (recordTravelPathCommand = new CommandHandler(RecordTravelPath, true));
+        public bool EraseActionCommandEnabled => ActionListGenerator.Recording;
 
-        // CancelTravelPath command
-        ICommand cancelTravelPathCommand;
-
-        void CancelTravelPath()
+        ICommand eraseActionCommand;
+        public ICommand EraseActionCommand =>
+            eraseActionCommand ?? (eraseActionCommand = new CommandHandler(EraseAction, true));
+        void EraseAction()
         {
             try
             {
-                TravelPathGenerator.Cancel();
+                var isLoggedIn = ObjectManager.IsLoggedIn;
+                if (isLoggedIn)
+                {
+                    ActionListGenerator.EraseAction(ObjectManager.Player, Log, eraseActionIndex);
 
-                OnPropertyChanged(nameof(StartRecordingTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(RecordTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(EraseTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(ListPathCommandEnabled));
-                OnPropertyChanged(nameof(SaveTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(CancelTravelPathCommandEnabled));
+                    OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                    OnPropertyChanged(nameof(AddActionCommandEnabled));
+                    OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                    OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                    OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                    OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                    OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                    OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
-                Log("Canceling new travel path...");
+                }
+                else
+                    Log("Erase Action failed. Not logged in.");
             }
             catch (Exception e)
             {
@@ -736,30 +795,102 @@ namespace BloogBot.UI
             }
         }
 
-        public ICommand CancelTravelPathCommand =>
-            cancelTravelPathCommand ?? (cancelTravelPathCommand = new CommandHandler(CancelTravelPath, true));
+        
 
-        // SaveTravelPath command
-        ICommand saveTravelPathCommand;
+        public bool ListActionCommandEnabled => ActionListGenerator.Recording;
 
-        void SaveTravelPath()
+        ICommand listActionCommand;
+        public ICommand ListActionCommand =>
+            listActionCommand ?? (listActionCommand = new CommandHandler(ListAction, true));
+
+        void ListAction()
         {
             try
             {
-                var waypoints = TravelPathGenerator.Save();
-                var travelPath = Repository.AddTravelPath(newTravelPathName, waypoints);
+                var isLoggedIn = ObjectManager.IsLoggedIn;
+                if (isLoggedIn)
+                {
+                    ActionListGenerator.ListAction(ObjectManager.Player, Log);
 
-                TravelPaths.Add(travelPath);
-                TravelPaths = new ObservableCollection<TravelPath>(TravelPaths.OrderBy(p => p?.Name));
+                    OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                    OnPropertyChanged(nameof(AddActionCommandEnabled));
+                    OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                    OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                    OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                    OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                    OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                    OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
-                NewTravelPathName = string.Empty;
+                }
+                else
+                    Log("List Action failed. Not logged in.");
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e);
+                //Log(COMMAND_ERROR);
+            }
+        }
 
-                OnPropertyChanged(nameof(StartRecordingTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(RecordTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(EraseTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(ListPathCommandEnabled));
-                OnPropertyChanged(nameof(SaveTravelPathCommandEnabled));
-                OnPropertyChanged(nameof(CancelTravelPathCommandEnabled));
+
+        
+
+        // CancelActionList command
+        ICommand cancelActionListCommand;
+        public ICommand CancelActionListCommand =>
+            cancelActionListCommand ?? (cancelActionListCommand = new CommandHandler(CancelActionList, true));
+        public bool CancelActionListCommandEnabled => ActionListGenerator.Recording;
+        void CancelActionList()
+        {
+            try
+            {
+                ActionListGenerator.Cancel();
+
+                OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                OnPropertyChanged(nameof(AddActionCommandEnabled));
+                OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                OnPropertyChanged(nameof(ListActionCommandEnabled));
+                OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                OnPropertyChanged(nameof(CancelActionListCommandEnabled));
+
+                Log("Canceling new action list...");
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e);
+                //Log(COMMAND_ERROR);
+            }
+        }
+
+        
+
+        // SaveActionList command
+        ICommand saveActionListCommand;
+        public ICommand SaveActionListCommand =>
+            saveActionListCommand ?? (saveActionListCommand = new CommandHandler(SaveActionList, true));
+        public bool SaveActionListCommandEnabled =>
+            ActionListGenerator.Recording &&
+            ActionListGenerator.ActionCount > 0 &&
+            !string.IsNullOrWhiteSpace(newActionListName);
+        void SaveActionList()
+        {
+            try
+            {
+                ActionListGenerator.Save(newActionListName);
+
+
+                NewActionListName = string.Empty;
+
+                OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                OnPropertyChanged(nameof(AddActionCommandEnabled));
+                OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                OnPropertyChanged(nameof(ListActionCommandEnabled));
+                OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                OnPropertyChanged(nameof(CancelActionListCommandEnabled));
                 OnPropertyChanged(nameof(TravelPaths));
 
                 Log("New travel path successfully saved!");
@@ -771,8 +902,7 @@ namespace BloogBot.UI
             }
         }
 
-        public ICommand SaveTravelPathCommand =>
-            saveTravelPathCommand ?? (saveTravelPathCommand = new CommandHandler(SaveTravelPath, true));
+        
 
         // StartTravelPath
         ICommand startTravelPathCommand;

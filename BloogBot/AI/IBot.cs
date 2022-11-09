@@ -15,7 +15,7 @@ namespace BloogBot.AI
         bool Running();
 
         //void Start(IDependencyContainer container, Action stopCallback);
-        void Start(List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack, ActionList actionList, Action stopCallback);
+        void Start(ActionList actionList, Action stopCallback);
 
         void Stop();
 
@@ -26,6 +26,8 @@ namespace BloogBot.AI
         void StartInternal(ActionList actionList);
 
         void Test(IDependencyContainer container);
+
+        ActionList actionList { get; }
 
     }
 }

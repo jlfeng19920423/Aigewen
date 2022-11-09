@@ -10,21 +10,20 @@ namespace BloogBot.AI.SharedStates
     {
         readonly Stack<IBotState> botStates;
         //readonly IDependencyContainer container;
-        readonly List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack;
+        //readonly List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack;
         readonly ActionList actionList;
 
 
-        public ActionStackState(Stack<IBotState> botStates, List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack, ActionList actionList)
+        public ActionStackState(Stack<IBotState> botStates, ActionList actionList)
         {
             this.botStates = botStates;
             //this.container = container;
-            this.stateStack = stateStack;
             this.actionList = actionList;
         }
         public void Update()
         {
 
-            Func<Stack<IBotState>, ActionList, IBotState> currentStack = stateStack.ElementAt(actionList.ActionIndex);
+            Func<Stack<IBotState>, ActionList, IBotState> currentStack = actionList.StateStack.ElementAt(actionList.ActionIndex);
 
             //botStates.Push(currentStack(botStates, actionIndex, actionList));
             if (actionList.ActionIndex != -1)

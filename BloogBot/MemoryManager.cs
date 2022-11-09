@@ -20,7 +20,7 @@ namespace BloogBot
 
         //read byte
         [HandleProcessCorruptedStateExceptions]
-        internal static byte ReadByte(IntPtr address)
+        public static byte ReadByte(IntPtr address)
         {
             try
             {
@@ -35,7 +35,7 @@ namespace BloogBot
 
         // read int
         [HandleProcessCorruptedStateExceptions]
-        internal static int ReadInt(IntPtr address)
+        public static int ReadInt(IntPtr address)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace BloogBot
         }
 
         [HandleProcessCorruptedStateExceptions]
-        static internal uint ReadUint(IntPtr address)
+        static public uint ReadUint(IntPtr address)
         {
             try
             {
@@ -63,7 +63,7 @@ namespace BloogBot
         }
 
         [HandleProcessCorruptedStateExceptions]
-        static internal ulong ReadUlong(IntPtr address)
+        static public ulong ReadUlong(IntPtr address)
         {
             try
             {
@@ -78,7 +78,7 @@ namespace BloogBot
 
         //read intptr
         [HandleProcessCorruptedStateExceptions]
-        static internal IntPtr ReadIntPtr(IntPtr address)
+        static public IntPtr ReadIntPtr(IntPtr address)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace BloogBot
         }
 
         [HandleProcessCorruptedStateExceptions]
-        internal static float ReadFloat(IntPtr address)
+        public static float ReadFloat(IntPtr address)
         {
             try
             {
@@ -107,7 +107,7 @@ namespace BloogBot
 
         //read string
         [HandleProcessCorruptedStateExceptions]
-        internal static string ReadString(IntPtr address)
+        public static string ReadString(IntPtr address)
         {
             var buffer = ReadBytes(address, 512);
             if (buffer.Length == 0)
@@ -123,7 +123,7 @@ namespace BloogBot
 
         //read stringname
         [HandleProcessCorruptedStateExceptions]
-        internal static string ReadStringName(IntPtr address, Encoding encoding)
+        public static string ReadStringName(IntPtr address, Encoding encoding)
         {
             var buffer = ReadBytes(address, 512);
             if (buffer.Length == 0)
@@ -138,7 +138,7 @@ namespace BloogBot
         }
 
         [HandleProcessCorruptedStateExceptions]
-        internal static byte[] ReadBytes(IntPtr address, int count)
+        public static byte[] ReadBytes(IntPtr address, int count)
         {
             try
             {
@@ -158,7 +158,7 @@ namespace BloogBot
         }
 
         [HandleProcessCorruptedStateExceptions]
-        static internal CGGuid ReadGuid(IntPtr address)
+        static public CGGuid ReadGuid(IntPtr address)
         {
             try
             {
@@ -172,7 +172,7 @@ namespace BloogBot
         }
 
         [HandleProcessCorruptedStateExceptions]
-        static internal Aura ReadAura(IntPtr address)
+        static public Aura ReadAura(IntPtr address)
         {
             try
             {
@@ -185,7 +185,7 @@ namespace BloogBot
             }
         }
 
-        internal static void WriteBytes(IntPtr address, byte[] bytes)
+        public static void WriteBytes(IntPtr address, byte[] bytes)
         {
             //var process = Process.GetProcessesByName("WoW")[0].Handle;
             var processHandle = Process.GetProcessById(Process.GetCurrentProcess().Id).Handle;
@@ -193,7 +193,7 @@ namespace BloogBot
             WriteProcessMemory(processHandle, address, bytes, bytes.Length, ref ret);
         }
 
-        internal static IntPtr GetPosAddr(ref float[] pos)
+        public static IntPtr GetPosAddr(ref float[] pos)
         {
             try
             {

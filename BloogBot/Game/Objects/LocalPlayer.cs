@@ -38,6 +38,18 @@ namespace BloogBot.Game.Objects
             ThreadSynchronizer.RunOnMainThread(() => Functions.RetrieveCorpse());
         }
 
-        public bool KnowsSpell(int spellId) => ThreadSynchronizer.RunOnMainThread(() => Functions.IsSpellKnow(spellId, false));
+        public bool KnowsSpell(int spellId, bool isPet)
+        {
+            int ret = ThreadSynchronizer.RunOnMainThread(() => Functions.FindSlotBySpellId(spellId, isPet));
+            if (ret > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
     }
 }

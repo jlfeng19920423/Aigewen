@@ -1,14 +1,14 @@
 {
   "format": 1,
   "restore": {
-    "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\FishingBot.csproj": {}
+    "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\test\\test.csproj": {}
   },
   "projects": {
-    "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj": {
+    "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\BloogBot\\BloogBot.csproj": {
       "restore": {
-        "projectUniqueName": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj",
+        "projectUniqueName": "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\BloogBot\\BloogBot.csproj",
         "projectName": "BloogBot",
-        "projectPath": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj",
+        "projectPath": "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\BloogBot\\BloogBot.csproj",
         "frameworks": {
           "net48": {
             "projectReferences": {}
@@ -19,14 +19,14 @@
         "net48": {}
       }
     },
-    "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\FishingBot.csproj": {
+    "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\test\\test.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\FishingBot.csproj",
-        "projectName": "FishingBot",
-        "projectPath": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\FishingBot.csproj",
+        "projectUniqueName": "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\test\\test.csproj",
+        "projectName": "test",
+        "projectPath": "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\test\\test.csproj",
         "packagesPath": "C:\\Users\\tommy\\.nuget\\packages\\",
-        "outputPath": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\Fishing\\obj\\",
+        "outputPath": "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\test\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -47,8 +47,8 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj": {
-                "projectPath": "E:\\ReverseEngineering\\WoWBot\\ClassicTest9-FishBot\\BloogBot\\BloogBot.csproj"
+              "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\BloogBot\\BloogBot.csproj": {
+                "projectPath": "C:\\Users\\tommy\\Documents\\GitHub\\Aigewen\\BloogBot\\BloogBot.csproj"
               }
             }
           }
@@ -62,6 +62,12 @@
       "frameworks": {
         "net6.0": {
           "targetAlias": "net6.0",
+          "dependencies": {
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.1, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",

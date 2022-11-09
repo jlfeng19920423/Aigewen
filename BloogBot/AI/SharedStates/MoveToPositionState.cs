@@ -28,7 +28,7 @@ namespace BloogBot.AI.SharedStates
             //this.destination = destination;
             this.use2DPop = use2DPop; 
             this.actionList = actionList;
-            this.destination = actionList.waypoints.FirstOrDefault(u => u.Id == actionList.ActionIndex);
+            this.destination = actionList.Waypoints.FirstOrDefault(u => u.Id == actionList.ActionIndex);
             player = ObjectManager.Player;
             //stuckHelper = new StuckHelper(botStates, container);
         }
@@ -58,7 +58,7 @@ namespace BloogBot.AI.SharedStates
                 {
                     //player.StopAllMovement();
                     botStates.Pop();
-                    actionList.ActionIndex = actionList.nextactionIndexList.ElementAt(actionList.ActionIndex);
+                    actionList.ActionIndex = actionList.NextActionIndexList.ElementAt(actionList.ActionIndex);
                     return;
                 }
             }
@@ -68,7 +68,7 @@ namespace BloogBot.AI.SharedStates
                 {
                     //player.StopAllMovement();
                     botStates.Pop();
-                    actionList.ActionIndex = actionList.nextactionIndexList.ElementAt(actionList.ActionIndex);
+                    actionList.ActionIndex = actionList.NextActionIndexList.ElementAt(actionList.ActionIndex);
                     return;
                 }
             }

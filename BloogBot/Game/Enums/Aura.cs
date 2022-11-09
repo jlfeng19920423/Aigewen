@@ -5,7 +5,7 @@ namespace BloogBot.Game.Enums
 {
 	[StructLayout(LayoutKind.Sequential)]
 	
-	unsafe struct Aura
+	public unsafe struct Aura
 	{
 		fixed Char pad_0000[32]; //0x0000
 		CGGuid OwnerGuid; //0x0020
