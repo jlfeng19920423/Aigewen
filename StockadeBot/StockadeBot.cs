@@ -172,8 +172,8 @@ namespace StockadeBot
             ActionList actions;
 
             IBotState CreateMoveToPositionState(Stack<IBotState> botStates, ActionList ActionList) => new MoveToPositionState(botStates, ActionList);
-            IBotState CreateFaceTo(Stack<IBotState> botStates, ActionList ActionList) => new FaceTo(botStates, ActionList);
-            IBotState CreateFishingState(Stack<IBotState> botStates, ActionList ActionList) => new FishingState(botStates, ActionList);
+            //IBotState CreateFaceTo(Stack<IBotState> botStates, ActionList ActionList) => new FaceTo(botStates, ActionList);
+            //IBotState CreateFishingState(Stack<IBotState> botStates, ActionList ActionList) => new FishingState(botStates, ActionList);
 
 
             waypoints.Add(new Position((float)-8838.341, (float)634.9344, (float)94.64573, 0));
