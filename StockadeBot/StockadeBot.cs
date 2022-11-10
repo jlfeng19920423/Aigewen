@@ -171,59 +171,7 @@ namespace StockadeBot
         {
             ActionList actions;
 
-            IBotState CreateMoveToPositionState(Stack<IBotState> botStates, ActionList ActionList) => new MoveToPositionState(botStates, ActionList);
-            //IBotState CreateFaceTo(Stack<IBotState> botStates, ActionList ActionList) => new FaceTo(botStates, ActionList);
-            //IBotState CreateFishingState(Stack<IBotState> botStates, ActionList ActionList) => new FishingState(botStates, ActionList);
-
-
-            waypoints.Add(new Position((float)-8838.341, (float)634.9344, (float)94.64573, 0));
-            waypoints.Add(new Position((float)-8842.917, (float)641.5321, (float)95.70744, 1));
-            waypoints.Add(new Position((float)-8846.967, (float)651.1913, (float)96.78641, 2));
-            waypoints.Add(new Position((float)-8849.237, (float)661.3346, (float)97.32548, 3));
-            waypoints.Add(new Position((float)-8827.677, (float)678.1038, (float)97.46655, 4));
-            waypoints.Add(new Position((float)-8841.397, (float)716.8478, (float)97.5912, 5));
-            waypoints.Add(new Position((float)-8836.563, (float)727.4146, (float)97.6856, 6));
-            waypoints.Add(new Position((float)-8801.275, (float)745.8544, (float)97.59063, 7));
-            waypoints.Add(new Position((float)-8792.931, (float)771.1873, (float)96.33835, 8));
-
-            actionIndexList.Add(0);
-            actionIndexList.Add(1);
-            actionIndexList.Add(2);
-            actionIndexList.Add(3);
-            actionIndexList.Add(4);
-            actionIndexList.Add(5);
-            actionIndexList.Add(6);
-            actionIndexList.Add(7);
-            actionIndexList.Add(8);
-            actionIndexList.Add(9);
-            actionIndexList.Add(10);
-
-
-            nextactionIndexList.Add(1);
-            nextactionIndexList.Add(2);
-            nextactionIndexList.Add(3);
-            nextactionIndexList.Add(4);
-            nextactionIndexList.Add(5);
-            nextactionIndexList.Add(6);
-            nextactionIndexList.Add(7);
-            nextactionIndexList.Add(8);
-            nextactionIndexList.Add(9);
-            nextactionIndexList.Add(10);
-            nextactionIndexList.Add(-1);
-
-            stateStack.Add(CreateMoveToPositionState); //index 0
-            stateStack.Add(CreateMoveToPositionState); //index 1
-            stateStack.Add(CreateMoveToPositionState); //index 2
-            stateStack.Add(CreateMoveToPositionState); //index 3
-            stateStack.Add(CreateMoveToPositionState); //index 4
-            stateStack.Add(CreateMoveToPositionState); //index 5
-            stateStack.Add(CreateMoveToPositionState); //index 6
-            stateStack.Add(CreateMoveToPositionState); //index 7
-            stateStack.Add(CreateMoveToPositionState); //index 8
-            stateStack.Add(CreateFaceTo); //index 9
-            stateStack.Add(CreateFishingState); //index 10
-
-
+            
 
             actions = new ActionList(waypoints, actionIndexList, nextactionIndexList, stateStack);
             actions.ActionIndex = 0;

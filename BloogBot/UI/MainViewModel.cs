@@ -416,7 +416,7 @@ namespace BloogBot.UI
                     //OnPropertyChanged(nameof(ReloadBotsCommandEnabled));
                     //OnPropertyChanged(nameof(CurrentBotEnabled));
                     //OnPropertyChanged(nameof(GrindingHotspotEnabled));
-                    OnPropertyChanged(nameof(CurrentTravelPathEnabled));
+                    //OnPropertyChanged(nameof(CurrentTravelPathEnabled));
                 }
 
                 currentBot.Start(currentBot.actionList, stopCallback);
@@ -429,7 +429,7 @@ namespace BloogBot.UI
                 //OnPropertyChanged(nameof(ReloadBotsCommandEnabled));
                 //OnPropertyChanged(nameof(CurrentBotEnabled));
                 //OnPropertyChanged(nameof(GrindingHotspotEnabled));
-                OnPropertyChanged(nameof(CurrentTravelPathEnabled));
+                //OnPropertyChanged(nameof(CurrentTravelPathEnabled));
             }
             catch (Exception e)
             {
@@ -463,7 +463,7 @@ namespace BloogBot.UI
                 //OnPropertyChanged(nameof(ReloadBotsCommandEnabled));
                 //OnPropertyChanged(nameof(CurrentBotEnabled));
                 //OnPropertyChanged(nameof(GrindingHotspotEnabled));
-                OnPropertyChanged(nameof(CurrentTravelPathEnabled));
+                //OnPropertyChanged(nameof(CurrentTravelPathEnabled));
             }
             catch (Exception e)
             {
@@ -604,6 +604,7 @@ namespace BloogBot.UI
                     OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                     OnPropertyChanged(nameof(EraseActionCommandEnabled));
                     OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                     OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                     OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
@@ -641,6 +642,7 @@ namespace BloogBot.UI
                     OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                     OnPropertyChanged(nameof(EraseActionCommandEnabled));
                     OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                     OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                     OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
@@ -675,6 +677,7 @@ namespace BloogBot.UI
                     OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                     OnPropertyChanged(nameof(EraseActionCommandEnabled));
                     OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                     OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                     OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
@@ -688,8 +691,6 @@ namespace BloogBot.UI
                 //Log(COMMAND_ERROR);
             }
         }
-
-
 
         ICommand addPositionCommand;
         public ICommand AddPositionCommand =>
@@ -711,6 +712,7 @@ namespace BloogBot.UI
                     OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                     OnPropertyChanged(nameof(EraseActionCommandEnabled));
                     OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                     OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                     OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
@@ -745,6 +747,7 @@ namespace BloogBot.UI
                     OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                     OnPropertyChanged(nameof(EraseActionCommandEnabled));
                     OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                     OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                     OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
@@ -758,7 +761,6 @@ namespace BloogBot.UI
                 //Log(COMMAND_ERROR);
             }
         }
-
 
         public bool EraseActionCommandEnabled => ActionListGenerator.Recording;
 
@@ -781,6 +783,7 @@ namespace BloogBot.UI
                     OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                     OnPropertyChanged(nameof(EraseActionCommandEnabled));
                     OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                     OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                     OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
@@ -795,8 +798,7 @@ namespace BloogBot.UI
             }
         }
 
-        
-
+       
         public bool ListActionCommandEnabled => ActionListGenerator.Recording;
 
         ICommand listActionCommand;
@@ -819,6 +821,7 @@ namespace BloogBot.UI
                     OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                     OnPropertyChanged(nameof(EraseActionCommandEnabled));
                     OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                     OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                     OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
@@ -833,8 +836,42 @@ namespace BloogBot.UI
             }
         }
 
+        public bool AutoRecordCommandEnabled => ActionListGenerator.Recording;
 
-        
+        ICommand autoRecordCommand;
+        public ICommand AutoRecordCommand =>
+            autoRecordCommand ?? (autoRecordCommand = new CommandHandler(AutoRecord, true));
+
+        void AutoRecord()
+        {
+            try
+            {
+                var isLoggedIn = ObjectManager.IsLoggedIn;
+                if (isLoggedIn)
+                {
+                    ActionListGenerator.AutoRecord(ObjectManager.Player, Log);
+
+                    OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
+                    OnPropertyChanged(nameof(AddActionCommandEnabled));
+                    OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                    OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                    OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
+                    OnPropertyChanged(nameof(EraseActionCommandEnabled));
+                    OnPropertyChanged(nameof(ListActionCommandEnabled));
+                    OnPropertyChanged(nameof(AutoRecordCommandEnabled));
+                    OnPropertyChanged(nameof(SaveActionListCommandEnabled));
+                    OnPropertyChanged(nameof(CancelActionListCommandEnabled));
+
+                }
+                else
+                    Log("Auto Record failed. Not logged in.");
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e);
+                //Log(COMMAND_ERROR);
+            }
+        }
 
         // CancelActionList command
         ICommand cancelActionListCommand;
@@ -854,6 +891,7 @@ namespace BloogBot.UI
                 OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                 OnPropertyChanged(nameof(EraseActionCommandEnabled));
                 OnPropertyChanged(nameof(ListActionCommandEnabled));
+                OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                 OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                 OnPropertyChanged(nameof(CancelActionListCommandEnabled));
 
@@ -866,8 +904,7 @@ namespace BloogBot.UI
             }
         }
 
-        
-
+       
         // SaveActionList command
         ICommand saveActionListCommand;
         public ICommand SaveActionListCommand =>
@@ -887,11 +924,14 @@ namespace BloogBot.UI
 
                 OnPropertyChanged(nameof(StartRecordingActionListCommandEnabled));
                 OnPropertyChanged(nameof(AddActionCommandEnabled));
+                OnPropertyChanged(nameof(AddPositionCommandEnabled));
+                OnPropertyChanged(nameof(InsertActionAtCommandEnabled));
+                OnPropertyChanged(nameof(InsertPositionAtCommandEnabled));
                 OnPropertyChanged(nameof(EraseActionCommandEnabled));
                 OnPropertyChanged(nameof(ListActionCommandEnabled));
+                OnPropertyChanged(nameof(AutoRecordCommandEnabled));
                 OnPropertyChanged(nameof(SaveActionListCommandEnabled));
                 OnPropertyChanged(nameof(CancelActionListCommandEnabled));
-                OnPropertyChanged(nameof(TravelPaths));
 
                 Log("New travel path successfully saved!");
             }
@@ -902,20 +942,28 @@ namespace BloogBot.UI
             }
         }
 
-        
 
-        // StartTravelPath
-        ICommand startTravelPathCommand;
 
-        void StartTravelPath()
+        // StartTestBot
+        public bool StartTestBotCommandEnabled => !currentBot.Running();
+        ICommand startTestBotCommand;
+
+        void startTestBot()
         {
             try
             {
-                //TO DO
+                void stopCallback()
+                {
+                    OnPropertyChanged(nameof(StartTestBotCommandEnabled));
+                    OnPropertyChanged(nameof(StopTestCommandEnabled));
+                    OnPropertyChanged(nameof(TestBotNextStateCommandEnabled));
+                }
 
-                
+                currentBot.StartTestBot(currentBot.actionList, stopCallback);
 
-                Log("Travel started!");
+                OnPropertyChanged(nameof(StartTestBotCommandEnabled));
+                OnPropertyChanged(nameof(StopTestCommandEnabled));
+                OnPropertyChanged(nameof(TestBotNextStateCommandEnabled));
             }
             catch (Exception e)
             {
@@ -924,21 +972,22 @@ namespace BloogBot.UI
             }
         }
 
-        public ICommand StartTravelPathCommand =>
-            startTravelPathCommand ?? (startTravelPathCommand = new CommandHandler(StartTravelPath, true));
+        public ICommand StartTestBotCommand =>
+            startTestBotCommand ?? (startTestBotCommand = new CommandHandler(startTestBot, true));
 
-        // StopTravelPath
-        ICommand stopTravelPathCommand;
+        // TestBotNextState
+        public bool TestBotNextStateCommandEnabled => currentBot.Running();
+        ICommand testBotNextStateCommand;
 
-        void StopTravelPath()
+        void TestBotNextState()
         {
             try
             {
-                //TO DO
+                currentBot.TestBotNextState();
 
-                
-
-                Log("TravelPath stopped!");
+                OnPropertyChanged(nameof(StartTestBotCommandEnabled));
+                OnPropertyChanged(nameof(StopTestCommandEnabled));
+                OnPropertyChanged(nameof(TestBotNextStateCommandEnabled));
             }
             catch (Exception e)
             {
@@ -947,8 +996,37 @@ namespace BloogBot.UI
             }
         }
 
-        public ICommand StopTravelPathCommand =>
-            stopTravelPathCommand ?? (stopTravelPathCommand = new CommandHandler(StopTravelPath, true));
+        public ICommand TestBotNextStateCommand =>
+            testBotNextStateCommand ?? (testBotNextStateCommand = new CommandHandler(TestBotNextState, true));
+
+        // StopTestBot
+        public bool StopTestCommandEnabled => currentBot.Running();
+        ICommand stopTestBotCommand;
+
+        void StopTestBot()
+        {
+            try
+            {
+                currentBot.StopTest();
+
+                OnPropertyChanged(nameof(StartTestBotCommandEnabled));
+                OnPropertyChanged(nameof(StopTestCommandEnabled));
+                OnPropertyChanged(nameof(TestBotNextStateCommandEnabled));
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e);
+                //Log(COMMAND_ERROR);
+            }
+        }
+
+        public ICommand StopTestBotCommand =>
+            stopTestBotCommand ?? (stopTestBotCommand = new CommandHandler(StopTestBot, true));
+
+
+
+
+
 
         public ICommand ClearLogCommand =>
             clearLogCommand ?? (clearLogCommand = new CommandHandler(ClearLog, true));

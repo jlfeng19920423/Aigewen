@@ -16,8 +16,9 @@ namespace BloogBot.AI
         readonly Stack<IBotState> botStates = new Stack<IBotState>();
 
         bool running;
+        bool nextState;
         bool retrievingCorpse;
-
+        Type stackState;
         Type currentState;
         int currentStateStartTime;
         Position currentPosition;
@@ -28,66 +29,30 @@ namespace BloogBot.AI
 
         Action stopCallback;
 
-        //public bool Running() => running;
+        public bool Running() => running;
 
 
-        /*
-        public void Start(IDependencyContainer container, Action stopCallback)
+        public void Start(ActionList actionList, Action stopCallback)
         {
             this.stopCallback = stopCallback;
-
             try
             {
                 running = true;
 
-                ThreadSynchronizer.RunOnMainThread(() =>
-                {
-                    currentLevel = ObjectManager.Player.Level;
-
-                    currentState = botStates.Peek().GetType();
-                    currentStateStartTime = Environment.TickCount;
-                    currentPosition = ObjectManager.Player.UnitPosition;
-                    currentPositionStartTime = Environment.TickCount;
-                    teleportCheckPosition = ObjectManager.Player.UnitPosition;
-                });
-
-            }
-            catch (Exception e)
-            {
-                //Logger.Log(e);
-            }
-        }
-        */
-        /*
-        public void Travel(IDependencyContainer container, bool reverseTravelPath, Action callback)
-        {
-            try
-            {
-                running = true;
-                
-                var waypoints = container
-                    .BotSettings
-                    .CurrentTravelPath
-                    .Waypoints;
-
-                if (reverseTravelPath)
-                    waypoints = waypoints.Reverse().ToArray();
-
-                var closestWaypoint = waypoints
+                var closestWaypoint = actionList.Waypoints
                     .OrderBy(w => w.DistanceTo(ObjectManager.Player.UnitPosition))
                     .First();
-                
-                float[] closestWaypointPos = { closestWaypoint.X, closestWaypoint.Y, closestWaypoint.Z };
-                IntPtr closestWaypointPosPtr = MemoryManager.GetPosAddr(ref closestWaypointPos);
-
-                var startingIndex = waypoints
+                var startingIndex = actionList.Waypoints
                     .ToList()
                     .IndexOf(closestWaypoint);
 
+                actionList.ActionIndex = startingIndex;
+
                 ThreadSynchronizer.RunOnMainThread(() =>
                 {
                     currentLevel = ObjectManager.Player.Level;
 
+                    /*
                     void callbackInternal()
                     {
                         running = false;
@@ -95,26 +60,62 @@ namespace BloogBot.AI
                         currentPosition = null;
                         callback();
                     }
+                    */
 
-                    botStates.Push(new TravelState(botStates, container, waypoints, startingIndex, callbackInternal));
-                    botStates.Push(new MoveToPositionState(botStates, container, closestWaypoint, closestWaypointPosPtr));
-
+                    botStates.Push(new ActionStackState(botStates, actionList));
+                    
                     currentState = botStates.Peek().GetType();
                     currentStateStartTime = Environment.TickCount;
                     currentPosition = ObjectManager.Player.UnitPosition;
                     currentPositionStartTime = Environment.TickCount;
                     teleportCheckPosition = ObjectManager.Player.UnitPosition;
                 });
-
-                StartInternal(container);
-                
+                StartInternal(actionList);
             }
             catch (Exception e)
             {
                 //Logger.Log(e);
             }
         }
-        */
+        async public void StartInternal(ActionList actionList)
+        {
+            while (running)
+            {
+                try
+                {
+                    //Console.WriteLine("actionIndex{0}, Count:{1}", actionList.ActionIndex, botStates.Count());
+                    //Console.WriteLine(botStates.Peek()?.GetType().Name);
+                    ThreadSynchronizer.RunOnMainThread(() =>
+                    {
+                        if (botStates.Count() == 0 || actionList.ActionIndex == -1)
+                        {
+                            Stop();
+                            return;
+                        }
+
+                        var player = ObjectManager.Player;
+
+                        if (botStates.Peek().GetType() != currentState)
+                        {
+                            currentState = botStates.Peek().GetType();
+                            currentStateStartTime = Environment.TickCount;
+                        }
+
+                        if (botStates.Count > 0)
+                        {
+                            //container.Probe.CurrentState = botStates.Peek()?.GetType().Name;
+                            botStates.Peek()?.Update();
+                        }
+                    });
+                    await Task.Delay(100);
+                }
+                catch (Exception e)
+                {
+                    //Logger.Log(e + "\n");
+                }
+            }
+        }
+
         public void StartPowerlevel(IDependencyContainer container, Action stopCallback)
         {
             this.stopCallback = stopCallback;
@@ -142,132 +143,87 @@ namespace BloogBot.AI
                 //Logger.Log(e);
             }
         }
-        /*
-        async void StartPowerlevelInternal(IDependencyContainer container)
+
+        public void StartTestBot(ActionList actionList, Action stopCallback)
+        {
+            this.stopCallback = stopCallback;
+            try
+            {
+                running = true;
+
+                var closestWaypoint = actionList.Waypoints
+                    .OrderBy(w => w.DistanceTo(ObjectManager.Player.UnitPosition))
+                    .First();
+                var startingIndex = actionList.Waypoints
+                    .ToList()
+                    .IndexOf(closestWaypoint);
+
+                actionList.ActionIndex = startingIndex;
+
+                ThreadSynchronizer.RunOnMainThread(() =>
+                {
+                    currentLevel = ObjectManager.Player.Level;
+
+                    /*
+                    void callbackInternal()
+                    {
+                        running = false;
+                        currentState = null;
+                        currentPosition = null;
+                        callback();
+                    }
+                    */
+
+                    botStates.Push(new ActionStackState(botStates, actionList));
+                    nextState = false;
+                    currentState = botStates.Peek().GetType();
+                    stackState = currentState;
+                    currentStateStartTime = Environment.TickCount;
+                    currentPosition = ObjectManager.Player.UnitPosition;
+                    currentPositionStartTime = Environment.TickCount;
+                    teleportCheckPosition = ObjectManager.Player.UnitPosition;
+                });
+                TestBotInternal(actionList);
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e);
+            }
+        }
+
+        async public void TestBotInternal(ActionList actionList)
         {
             while (running)
             {
                 try
                 {
-                    
                     ThreadSynchronizer.RunOnMainThread(() =>
                     {
-                        if (botStates.Count() == 0)
+                        if (botStates.Count() == 0 || actionList.ActionIndex == -1)
                         {
                             Stop();
                             return;
                         }
 
                         var player = ObjectManager.Player;
-                        player.AntiAfk();
 
-                        if (player.IsFalling)
-                        {
-                            container.DisableTeleportChecker = true;
-                            isFalling = true;
-                        }
-
-                        if (player.Position.DistanceTo(teleportCheckPosition) > 10 && !container.DisableTeleportChecker && container.BotSettings.UseTeleportKillswitch)
-                        {
-                            DiscordClientWrapper.TeleportAlert(player.Name);
-                            Stop();
-                            return;
-                        }
-                        teleportCheckPosition = player.Position;
-
-                        if (isFalling && !player.IsFalling)
-                        {
-                            container.DisableTeleportChecker = false;
-                            isFalling = false;
-                        }
-
-                        if (botStates.Count > 0 && botStates.Peek()?.GetType() == typeof(GrindState))
-                        {
-                            container.RunningErrands = false;
-                            retrievingCorpse = false;
-                        }
-
-                        // if the player has been stuck in the same state for more than 5 minutes
-                        if (Environment.TickCount - currentStateStartTime > 300000 && currentState != typeof(TravelState) && container.BotSettings.UseStuckInStateKillswitch)
-                        {
-                            var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the {currentState.Name} for over 5 minutes. I'm stopping for now.";
-                            LogToFile(msg);
-                            DiscordClientWrapper.SendMessage(msg);
-                            Stop();
-                            return;
-                        }
                         if (botStates.Peek().GetType() != currentState)
                         {
                             currentState = botStates.Peek().GetType();
-                            currentStateStartTime = Environment.TickCount;
                         }
 
-                        // if the player has been stuck in the same position for more than 5 minutes
-                        if (Environment.TickCount - currentPositionStartTime > 300000 && container.BotSettings.UseStuckInPositionKillswitch)
+                        if (currentState == stackState && nextState)
                         {
-                            var msg = $"Hey, it's {player.Name}, and I need help! I've been stuck in the same position for over 5 minutes. I'm stopping for now.";
-                            LogToFile(msg);
-                            DiscordClientWrapper.SendMessage(msg);
-                            Stop();
-                            return;
-                        }
-                        if (player.Position.DistanceTo(currentPosition) > 10)
-                        {
-                            currentPosition = player.Position;
-                            currentPositionStartTime = Environment.TickCount;
+                            botStates.Peek()?.Update();
+                            nextState = false;
                         }
 
-                        // if the player dies
-                        if ((player.Health <= 0 || player.InGhostForm) && !retrievingCorpse)
+                        if (botStates.Count > 0 && currentState != stackState)
                         {
-                            PopStackToBaseState();
-
-                            retrievingCorpse = true;
-                            container.RunningErrands = true;
-
-                            container.DisableTeleportChecker = true;
-
-                            botStates.Push(container.CreateRestState(botStates, container));
-                            botStates.Push(new RetrieveCorpseState(botStates, container));
-                            botStates.Push(new MoveToCorpseState(botStates, container));
-                            botStates.Push(new ReleaseCorpseState(botStates, container));
-                        }
-
-                        var currentHotspot = container.GetCurrentHotspot();
-
-                        // if equipment needs to be repaired
-                        int mainhandDurability = Inventory.GetEquippedItem(EquipSlot.MainHand)?.DurabilityPercentage ?? 100;
-                        int offhandDurability = Inventory.GetEquippedItem(EquipSlot.Ranged)?.DurabilityPercentage ?? 100;
-
-                        // offhand throwns don't have durability, but instead register `-2147483648`.
-                        // This is a workaround to prevent that from causing us to get caught in a loop.
-                        // We default to a durability value of 100 for items that are null because 100 will register them as not needing repaired.
-                        if ((mainhandDurability <= 20 && mainhandDurability > -1 || (offhandDurability <= 20 && offhandDurability > -1)) && currentHotspot.RepairVendor != null && !container.RunningErrands)
-                        {
-                            ShapeshiftToHumanForm(container);
-                            PopStackToBaseState();
-
-                            container.RunningErrands = true;
-
-                            if (currentHotspot.TravelPath != null)
-                            {
-                                botStates.Push(new TravelState(botStates, container, currentHotspot.TravelPath.Waypoints, 0));
-                                botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.TravelPath.Waypoints[0]));
-                            }
-
-                            botStates.Push(new RepairEquipmentState(botStates, container, currentHotspot.RepairVendor.Name));
-                            botStates.Push(new MoveToPositionState(botStates, container, currentHotspot.RepairVendor.Position));
-                            container.CheckForTravelPath(botStates, true);
-                        }
-
-                        if (botStates.Count > 0)
-                        {
-                            container.Probe.CurrentState = botStates.Peek()?.GetType().Name;
                             botStates.Peek()?.Update();
                         }
                     });
-                    
-                    await Task.Delay(25);
+                    await Task.Delay(100);
                 }
                 catch (Exception e)
                 {
@@ -275,7 +231,34 @@ namespace BloogBot.AI
                 }
             }
         }
-        */
+
+        public void TestBotNextState()
+        {
+            nextState = true;
+        }
+
+
+        public void Stop()
+        {
+            running = false;
+            currentLevel = 0;
+
+            while (botStates.Count > 0)
+                botStates.Pop();
+
+            stopCallback?.Invoke();
+        }
+
+        public void StopTest()
+        {
+            running = false;
+            currentLevel = 0;
+
+            while (botStates.Count > 0)
+                botStates.Pop();
+
+            stopCallback?.Invoke();
+        }
 
         void LogToFile(string text)
         {

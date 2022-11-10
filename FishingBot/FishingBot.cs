@@ -19,22 +19,12 @@ namespace FishingBot
     {
         readonly Stack<IBotState> botStates = new Stack<IBotState>();
 
-        bool running;
-        public bool Running() => running;
-
-        Type currentState;
-        int currentStateStartTime;
-        Position currentPosition;
-        int currentPositionStartTime;
-        Position teleportCheckPosition;
-        int currentLevel;
-
+        
         public FishingBot()
         {
             initialActionList();
         }
 
-        Action stopCallback;
         public string Name => "Fishing";
         public string FileName => "Fishing.dll";
         bool AdditionalTargetingCriteria(WoWUnit unit) => true;
@@ -62,109 +52,12 @@ namespace FishingBot
                 probe);
         //hotspots);
 
-        public List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack = new List<Func<Stack<IBotState>, ActionList, IBotState>>();
-
-        public void Start(ActionList actionList, Action stopCallback)
-        {
-            this.stopCallback = stopCallback;
-            try
-            {
-                running = true;
-
-                var closestWaypoint = actionList.Waypoints
-                    .OrderBy(w => w.DistanceTo(ObjectManager.Player.UnitPosition))
-                    .First();
-                var startingIndex = actionList.Waypoints
-                    .ToList()
-                    .IndexOf(closestWaypoint);
-
-                actionList.ActionIndex = startingIndex;
-
-                ThreadSynchronizer.RunOnMainThread(() =>
-                {
-                    currentLevel = ObjectManager.Player.Level;
-
-                    /*
-                    void callbackInternal()
-                    {
-                        running = false;
-                        currentState = null;
-                        currentPosition = null;
-                        callback();
-                    }
-                    */
-
-                    botStates.Push(new ActionStackState(botStates, actionList));
-
-                    currentState = botStates.Peek().GetType();
-                    currentStateStartTime = Environment.TickCount;
-                    currentPosition = ObjectManager.Player.UnitPosition;
-                    currentPositionStartTime = Environment.TickCount;
-                    teleportCheckPosition = ObjectManager.Player.UnitPosition;
-                });
-                StartInternal(actionList);
-            }
-            catch (Exception e)
-            {
-                //Logger.Log(e);
-            }
-        }
-        async public void StartInternal(ActionList actionList)
-        {
-            while (running)
-            {
-                try
-                {
-                    //Console.WriteLine("actionIndex{0}, Count:{1}", actionList.ActionIndex, botStates.Count());
-                    //Console.WriteLine(botStates.Peek()?.GetType().Name);
-                    ThreadSynchronizer.RunOnMainThread(() =>
-                    {
-                        if (botStates.Count() == 0 || actionList.ActionIndex == -1)
-                        {
-                            Stop();
-                            return;
-                        }
-
-                        var player = ObjectManager.Player;
-
-                        if (botStates.Peek().GetType() != currentState)
-                        {
-                            currentState = botStates.Peek().GetType();
-                            currentStateStartTime = Environment.TickCount;
-                        }
-
-                        if (botStates.Count > 0)
-                        {
-                            //container.Probe.CurrentState = botStates.Peek()?.GetType().Name;
-                            botStates.Peek()?.Update();
-                        }
-                    });
-                    await Task.Delay(100);
-                }
-                catch (Exception e)
-                {
-                    //Logger.Log(e + "\n");
-                }
-            }
-        }
-
-        public void Stop()
-        {
-            running = false;
-            currentLevel = 0;
-
-            while (botStates.Count > 0)
-                botStates.Pop();
-
-            stopCallback?.Invoke();
-        }
+        public static List<Func<Stack<IBotState>, ActionList, IBotState>> stateStack = new List<Func<Stack<IBotState>, ActionList, IBotState>>();
+        public static List<Position> waypoints = new List<Position>();
+        public static List<int> actionIndexList = new List<int>();
+        public static List<int> nextactionIndexList = new List<int>();
 
         public void Test(IDependencyContainer container) { }
-
-
-        static public List<Position> waypoints = new List<Position>();
-        static public List<int> actionIndexList = new List<int>();
-        static public List<int> nextactionIndexList = new List<int>();
 
         public ActionList actionList => initialActionList();
 

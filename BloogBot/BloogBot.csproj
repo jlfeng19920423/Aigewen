@@ -107,6 +107,7 @@
     <Compile Include="AI\IBotState.cs" />
     <Compile Include="AI\IDependencyContainer.cs" />
     <Compile Include="AI\SharedStates\ActionStackState.cs" />
+    <Compile Include="AI\SharedStates\FaceTo.cs" />
     <Compile Include="AI\SharedStates\MoveToPositionState.cs" />
     <Compile Include="AI\SharedStates\ReleaseCorpseState.cs" />
     <Compile Include="AI\SharedStates\StuckState.cs" />

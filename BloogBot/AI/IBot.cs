@@ -29,5 +29,12 @@ namespace BloogBot.AI
 
         ActionList actionList { get; }
 
+        void StartTestBot(ActionList actionList, Action stopCallback);
+
+        void TestBotInternal(ActionList actionList);
+
+        void TestBotNextState();
+
+        void StopTest();
     }
 }
