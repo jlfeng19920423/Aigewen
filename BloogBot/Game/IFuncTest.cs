@@ -8,7 +8,7 @@ namespace BloogBot.Game
 {
     public interface IFuncTest
     {
-        void FuncTest(int spellid, Action<string> log);
+        void FuncTest(int spellid, int spellcd, Action<string> log);
 
         void GetTargetEnt(Action<string> log);
 

@@ -20,5 +20,10 @@ namespace BloogBot.Game.Objects
             //    Info = new ItemCacheInfo(itemCacheEntry);
             //}
         }
+
+        public int Id => MemoryManager.ReadInt(IntPtr.Add(EntPtr, Offsets.ItemId));
+        public int StackCount => MemoryManager.ReadInt(IntPtr.Add(EntPtr, Offsets.ItemStackCount));
+        public int Durability => MemoryManager.ReadInt(IntPtr.Add(EntPtr, Offsets.ItemDurability));
+        public int MaxDurability => MemoryManager.ReadInt(IntPtr.Add(EntPtr, Offsets.ItemMaxDurability));
     }
 }

@@ -11,6 +11,27 @@ namespace BloogBot.Game
 {
     static public class Functions
     {
+        [DllImport("Kernel32.dll")]
+        private static extern bool QueryPerformanceCounter(
+            out long lpPerformanceCount);
+
+        [DllImport("Kernel32.dll")]
+        private static extern bool QueryPerformanceFrequency(
+            out long lpFrequency);
+        public static long currenttime()
+        {
+            IntPtr hardwareEventPtr = IntPtr.Add(Offsets.MemBase, Offsets.EvenTime);
+
+            long perfCount;
+            long freq;
+
+            QueryPerformanceFrequency(out freq);
+            QueryPerformanceCounter(out perfCount);
+
+            long currentTime = (perfCount * 1000) / freq;
+            return currentTime;
+        }
+
         //FindSlotBySpellId: return the slot of spellid for "false" local player ("true" pet)
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         delegate int FindSlotBySpellIdDelegate(Int32 SpellId, bool isPet);

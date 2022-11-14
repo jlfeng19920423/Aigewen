@@ -17,6 +17,8 @@ namespace BloogBot.Game
 
         internal static IList<WoWObject> Objects = new List<WoWObject>();
         static internal IList<WoWObject> ObjectsBuffer = new List<WoWObject>();
+        public static IList<CoolDown> CoolDowns = new List<CoolDown>();
+        public static IList<CoolDown> CoolDownsBuffer = new List<CoolDown>();
 
         internal static Dictionary<CGGuid, string> PlayerNames = new Dictionary<CGGuid, string>();
 
@@ -44,6 +46,7 @@ namespace BloogBot.Game
                 {
                     TraverseNameManager();
                     TraverseObjectManager();
+                    TraverseCoolDowns();
                     await Task.Delay(200);
                 }
                 catch (Exception e)
@@ -58,6 +61,7 @@ namespace BloogBot.Game
         {
             if (IsLoggedIn)
             {
+                ObjectsBuffer.Clear();
                 IntPtr ObjMgr = MemoryManager.ReadIntPtr(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Object_Manager.Base));
                 int Count = MemoryManager.ReadInt(ObjMgr);
                 IntPtr ArrayAddr = MemoryManager.ReadIntPtr(IntPtr.Add(ObjMgr, Offsets.array));
@@ -110,27 +114,6 @@ namespace BloogBot.Game
                 }
 
                 Objects = new List<WoWObject>(ObjectsBuffer);
-
-                if (Player != null)
-                {
-                    var petFound = false;
-
-                    foreach (var unit in Units)
-                    {
-                        //if (unit.SummonedByGuid == Player?.Guid)
-                        //{
-                        //    Pet = new LocalPet(unit.Pointer, unit.Guid, unit.ObjectType);
-                        //    petFound = true;
-                        //}
-
-                        if (!petFound)
-                            Pet = null;
-                    }
-
-                    // TODO
-                    //Player.RefreshSpells();
-                    //UpdateProbe();
-                }
             }
         }
 
@@ -169,6 +152,37 @@ namespace BloogBot.Game
                 {
                     //return false;
                 }
+            }
+        }
+
+        
+        internal static void TraverseCoolDowns()
+        {
+            try
+            {
+                CoolDownsBuffer.Clear();
+                int spellId;
+                int itemId;
+                int startTime;
+                int GCDstartTime;
+
+                var CDBase = IntPtr.Add(MemoryAddresses.MemBase, Offsets.CooldownHistory);
+                var CDArrayAddr = MemoryManager.ReadIntPtr(IntPtr.Add(CDBase, Offsets.CooldownOffset));
+                spellId = MemoryManager.ReadInt(IntPtr.Add(CDArrayAddr, Offsets.CooldownSpellId));
+                while (spellId > 0)
+                {
+                    itemId = MemoryManager.ReadInt(IntPtr.Add(CDArrayAddr, Offsets.CooldownItemId));
+                    startTime = MemoryManager.ReadInt(IntPtr.Add(CDArrayAddr, Offsets.CooldownStartTime));
+                    GCDstartTime = MemoryManager.ReadInt(IntPtr.Add(CDArrayAddr, Offsets.CooldownGCDStartTime));
+                    CoolDownsBuffer.Add(new CoolDown(spellId, itemId, startTime, GCDstartTime));
+                    CDArrayAddr = MemoryManager.ReadIntPtr(IntPtr.Add(CDArrayAddr, Offsets.CooldownNext));
+                    spellId = MemoryManager.ReadInt(IntPtr.Add(CDArrayAddr, Offsets.CooldownSpellId));
+                }
+                CoolDowns = new List<CoolDown>(CoolDownsBuffer);
+            }
+            catch (Exception e)
+            {
+                //return false;
             }
         }
 

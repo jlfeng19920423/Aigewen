@@ -188,6 +188,7 @@ namespace BloogBot.Game
         public static int ItemGetName = 0x146D3C0; // int64 (CGItem* item, char* nameBuff, uint32 size/*=256*/) //48 89 5C 24 ? 48 89 74 24 ? 57 48 81 EC ? ? ? ? 48 8B D9 41 8B F0 48 81 C1 ? ? ? ?
         public static int ItemStackCount = 0x1D0;
         public static int ItemFlags = 0x1D8;
+        public static int ItemId = 0x150;
         public static int ItemDurability = 0x1E4;
         public static int ItemMaxDurability = 0x1E8;
         public static int ItemEnchantment = 0x2DC;

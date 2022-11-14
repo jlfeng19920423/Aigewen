@@ -134,6 +134,7 @@
     <Compile Include="Game\Fields_45327.cs" />
     <Compile Include="Game\Field_oiramario.cs" />
     <Compile Include="Game\IFuncTest.cs" />
+    <Compile Include="Game\Objects\CoolDown.cs" />
     <Compile Include="Game\Objects\LocalPet.cs" />
     <Compile Include="Game\Objects\WoWItem.cs" />
     <Compile Include="Game\Offsets_3_4_0_45506.cs" />

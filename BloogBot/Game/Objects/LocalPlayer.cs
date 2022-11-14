@@ -1,4 +1,5 @@
-﻿using BloogBot.Game.Enums;
+﻿using BloogBot.Game;
+using BloogBot.Game.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,10 +8,11 @@ namespace BloogBot.Game.Objects
 {
     public class LocalPlayer : WoWPlayer
     {
+        
         internal LocalPlayer(IntPtr pointer, CGGuid guid, ObjectType objectType)
             : base(pointer, guid, objectType)
         {
-            //RefreshSpells();
+            
         }
 
         readonly IDictionary<string, int[]> playerSpells = new Dictionary<string, int[]>();
@@ -51,5 +53,28 @@ namespace BloogBot.Game.Objects
             }
         }
 
+        public int ZoneId => MemoryManager.ReadInt(IntPtr.Add(MemoryAddresses.MemBase, Offsets.ZoneId));
+
+
+        public IList<CoolDown> cooldowns => ObjectManager.CoolDowns;
+        public bool IsSpellCD(int spellId, int spellcd)
+        {
+
+            if (cooldowns.FirstOrDefault(u => u.SpellId == spellId) == null) return true;
+
+            int startTime = cooldowns.Where(u => u.SpellId == spellId).Max(u => u.StartTime);
+
+            int gcdstartTime = cooldowns.Max(u => u.GCDStartTime);
+
+            long currentTime = Functions.currenttime();
+            if (currentTime > ((long)startTime + spellcd*1000) && currentTime > ((long)gcdstartTime + 1000))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 }

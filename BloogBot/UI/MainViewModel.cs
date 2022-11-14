@@ -95,7 +95,18 @@ namespace BloogBot.UI
             }
         }
 
-        
+        public int spellcd;
+        public int SpellCD
+        {
+            get => spellcd;
+            set
+            {
+                spellcd = value;
+                OnPropertyChanged(nameof(SpellCD));
+            }
+        }
+
+
         unsafe void Spell()
         {
             LocalPlayer player = ObjectManager.Player;
@@ -243,7 +254,7 @@ namespace BloogBot.UI
         {
             try 
             {
-                currentFunc.FuncTest(SpellId, Log);
+                currentFunc.FuncTest(SpellId, SpellCD, Log);
 
             }
             catch (Exception e)
@@ -252,9 +263,6 @@ namespace BloogBot.UI
             }
         }
 
-        IntPtr BobberEntryPtr = IntPtr.Zero;
-        
-        byte ret = 0;
         void GetTargetEnt()
         {
             try
@@ -269,78 +277,58 @@ namespace BloogBot.UI
 
         }
 
-        
+        bool onUnits;
+        bool onGameObjects;
+        bool onPlayers;
+        bool onItems;
+
+        public bool OnUnits
+        {
+            get => onUnits;
+            set
+            {
+                onUnits = value;
+                OnPropertyChanged(nameof(OnUnits));
+            }
+        }
+        public bool OnGameObjects
+        {
+            get => onGameObjects;
+            set
+            {
+                onGameObjects = value;
+                OnPropertyChanged(nameof(OnGameObjects));
+            }
+        }
+        public bool OnPlayers
+        {
+            get => onPlayers;
+            set
+            {
+                onPlayers = value;
+                OnPropertyChanged(nameof(OnPlayers));
+            }
+        }
+        public bool OnItems
+        {
+            get => onItems;
+            set
+            {
+                onItems = value;
+                OnPropertyChanged(nameof(OnItems));
+            }
+        }
         void Objects()
         {
-            var CurMgr = MemoryManager.ReadIntPtr(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Object_Manager.Base));
-            var Count = MemoryManager.ReadInt(CurMgr);
-            var ArrayAddr = MemoryManager.ReadIntPtr(IntPtr.Add(CurMgr, array));
-            var PlayerGuid1 = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Player_Guid));
-            var PlayerGuid2 = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Player_Guid) + 0x8);
-            var TargetGuid = MemoryManager.ReadGuid(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Target_Guid));
-            var FocusGuid = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Focus_Guid));
-            var LastTargetGuid = MemoryManager.ReadUlong(IntPtr.Add(MemoryAddresses.MemBase, Offsets.Guids.Last_Target_Guid));
-            Log($"测试：PlayerGuid:{PlayerGuid2.ToString("X2")}{PlayerGuid1.ToString("X2")}\t");
-            for (int i = 0; i < Count; i++)
+            try
             {
-                var ptr = MemoryManager.ReadIntPtr(IntPtr.Add(ArrayAddr, i * array));
-                if (ptr == IntPtr.Zero) continue;
-                int n = 0;
-                while (ptr != IntPtr.Zero)
-                {
-                    var entryPtr = MemoryManager.ReadIntPtr(IntPtr.Add(ptr, entGuid));
-                    var guid1 = MemoryManager.ReadUlong(IntPtr.Add(ptr, objGuid));
-                    var guid2 = MemoryManager.ReadUlong(IntPtr.Add(ptr, objGuid) + 0x8);
-                    var type = (ObjectType)MemoryManager.ReadByte(entryPtr + objType);
-                    /* LocalPlayer */
-                    n += 1;
-                    if (type ==ObjectType.LocalPlayer)
-                    {
-                        Log($"i:{i}\t n:{n}\t type:{type}\t ptr: 0x{ptr.ToString("X2")} \t Entry:0x{entryPtr.ToString("X2")}\t Guid:{guid2}{guid1}");
-                        LocalPlayerGuid1 = guid1;
-                        LocalPlayerGuid2 = guid2;
-                    }
-                    
-                    /* target properties */
-                    
-                    if (guid1 == TargetGuid.low && guid2 == TargetGuid.high && type == ObjectType.Unit)//info for Unit
-                    {
-                        var level = MemoryManager.ReadInt(IntPtr.Add(entryPtr, Fields.Unit.Level));  //correct
-                        var health = MemoryManager.ReadInt(IntPtr.Add(entryPtr, Fields.Unit.Health)); //correct
-                        var InfoIntPtr = MemoryManager.ReadIntPtr(IntPtr.Add(entryPtr, Fields.Unit.Info));
-                        var namePtr = MemoryManager.ReadIntPtr(IntPtr.Add(InfoIntPtr, Fields.Unit.Name));
-                        var nameUnit = MemoryManager.ReadStringName(namePtr, Encoding.UTF8);
-                        var MovePtr = MemoryManager.ReadIntPtr(IntPtr.Add(entryPtr, Fields.Unit.Movement));   //correct
-                        var UnitX = MemoryManager.ReadFloat(IntPtr.Add(MovePtr, Fields.Unit.Location));       //correct
-                        var UnitY = MemoryManager.ReadFloat(IntPtr.Add(MovePtr, Fields.Unit.Location + 4));     //correct
-                        var UnitZ = MemoryManager.ReadFloat(IntPtr.Add(MovePtr, Fields.Unit.Location + 8));     //correct
-                        Log($"i:{i}\t n:{n}\t type:{type}\t ptr:0x{ptr.ToString("X2")} \t Entry:0x{entryPtr.ToString("X2")} \t TargetGuid:{guid2.ToString("X2")}{guid1.ToString("X2")}\t type:{type}\tlevel:{level}\t Health:{health}\t name:{nameUnit}\t X:{UnitX}\t Y:{UnitY}\t Z:{UnitZ}");
-                    }
-                    
-                    if (guid1 == TargetGuid.low && guid2 == TargetGuid.high && type == ObjectType.Player)//info for player
-                    {
-                        var namePtr = MemoryManager.ReadIntPtr(IntPtr.Add(entryPtr, Fields.Object.Name1));   //correct
-                        //var namePlayer = MemoryManager.ReadStringName(namePtr+Fields.Object.Name2, Encoding.UTF8);
-                        Log($"i:{i}\t n:{n}\t type:{type}\t ptr:0x{ptr.ToString("X2")}\t Entry:0x{entryPtr.ToString("X2")} \t Guid:{guid2.ToString("X2")}{guid1.ToString("X2")}\t type:{type}");
-                    }
-                    
-                    if (type == ObjectType.GameObject)
-                    {
-                        var ObjCreatorGuid1 = MemoryManager.ReadUlong(IntPtr.Add(entryPtr, 0x210)); //correct
-                        var ObjCreatorGuid2 = MemoryManager.ReadUlong(IntPtr.Add(entryPtr, 0x210) + 0x8);   //correct
-                        var AnimateState = MemoryManager.ReadByte(IntPtr.Add(entryPtr, 0xA0));  //correct
-                        var namePtr = MemoryManager.ReadIntPtr(IntPtr.Add(entryPtr, 0x148));
-                        var NamePtr = MemoryManager.ReadIntPtr(IntPtr.Add(namePtr, 0xE0));
-                        var name = MemoryManager.ReadStringName(NamePtr, Encoding.UTF8);
-                        //var ObjID = MemoryManager.ReadStringName(IntPtr.Add(entryPtr, Fields.Object.ObjectID), Encoding.UTF8);
-                        Log($"i:{i}\t n:{n}\t type:{type}\t ptr:0x{ptr.ToString("X2")}\t Entry:0x{entryPtr.ToString("X2")}\t  CreatorGuid:{ObjCreatorGuid2}{ObjCreatorGuid1}\t AnimateState:{AnimateState}\t Name:{name}");
-                    }
-                    
-                    ptr = MemoryManager.ReadIntPtr(IntPtr.Add(ptr, 0x0));
-                }
-            }
+                currentFunc.TraverseObjects(Log, onUnits, onPlayers, onGameObjects, onItems);
 
-            
+            }
+            catch (Exception e)
+            {
+                //Logger.Log(e + "\n");
+            }
         }
 
 

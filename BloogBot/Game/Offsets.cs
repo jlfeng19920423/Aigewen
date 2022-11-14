@@ -209,12 +209,26 @@ namespace BloogBot.Game
         public const int ChatHistoryChannelNum = 0xCA4;
         public const int ItemStackCount = 0x1D0;
         public const int ItemFlags = 0x1D8;
+        public const int ItemId = 0x150;
         public const int ItemDurability = 0x1E4;
         public const int ItemMaxDurability = 0x1E8;
         public const int ItemEnchantment = 0x2DC;
         public const int ItemEnchantmentOffset = 0xC;
         public const int ItemContainedIn = 0x1A0;
         public const int ItemOwner = 0x190;
+        public const int CooldownEntrySize = 0x40; //[Base + CooldownHistory] + 0x40
+        public const int CooldownOffset = 0x10; 
+        public const int CooldownNext = 0x8;
+        public const int CooldownSpellId = 0x10; // [[Base + CooldownHistory] + 0x10] + 0x8*i +10
+        public const int CooldownItemId = 0x14; // [[Base + CooldownHistory] + 0x10] + 0x8*i +14
+        public const int CooldownStartTime = 0x1C;  // [[Base + CooldownHistory] + 0x10] + 0x8*i +1C
+        public const int CooldownSpellCooldownDuration = 0x20;
+        public const int CooldownSpellCategoryId = 0x24;
+        public const int CooldownCategoryCooldownStartTime = 0x28;
+        public const int CooldownCategoryCooldownDuration = 0x2C;
+        public const int CooldownGCDStartTime = 0x34;
+        public const int CooldownGCDCategoryId = 0x38;
+        public const int CooldownGCDDuration = 0x3C;
 
         public static int FuncAccessAuraoffset = 0x134D9C0;
         public static int FuncAccessHealth = 0x14293A0;
@@ -309,5 +323,7 @@ namespace BloogBot.Game
         public static int GameUICursorItem = 0x306EF48;
         public static int GameUICursorItemContainer = 0x306EF58;
         public static int GameUICursorItemSlot = 0x306EF68;
+        public static int ZoneId = 0x306FBC8;
+        public static int CooldownHistory = 0x300A090;
     }
 }

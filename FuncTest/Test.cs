@@ -8,21 +8,34 @@ using BloogBot;
 using BloogBot.Game;
 using BloogBot.Game.Objects;
 using BloogBot.Game.Enums;
+using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Diagnostics;
 
 namespace FuncTest
 {
     [Export(typeof(IFuncTest))]
     public class Test : IFuncTest
     {
-        public void FuncTest(int SpellId, Action<string> log)
+        public void FuncTest(int SpellId, int SpellCD, Action<string> log)
         {
             try
             {
                 LocalPlayer player = ObjectManager.Player;
 
-                bool spellKnow = player.KnowsSpell(SpellId, false);
+                bool spellCD = player.IsSpellCD(SpellId, SpellCD);
 
-                log(SpellId + "spell known is " + spellKnow.ToString());
+                if (spellCD)
+                {
+                    var spellSlot = ThreadSynchronizer.RunOnMainThread(() => Functions.FindSlotBySpellId(SpellId, false));
+                    ThreadSynchronizer.RunOnMainThread(() => Functions.CastSpellBySlot(spellSlot, player.TargetGuidPtr));
+                }
+                else
+                {
+                    log("spell: " + SpellId + " is cooling down");
+                }
+                //log(SpellId + "spell known is " + spellKnow.ToString());
 
             }
             catch (Exception e)
@@ -63,10 +76,24 @@ namespace FuncTest
     
         public void TraverseObjects(Action<string> log, bool onUnits, bool onPlayers, bool onGameObjects, bool onItems)
         {
+            LocalPlayer localPlayer = ObjectManager.Player;
             IEnumerable<WoWUnit> units = ObjectManager.Units;
             IEnumerable<WoWPlayer> players = ObjectManager.Players;
             IEnumerable<WoWGameObject> gameObjects = ObjectManager.GameObjects;
             IEnumerable<WoWItem> items = ObjectManager.Items;
+
+            if (localPlayer != null)
+            {
+                try
+                {
+                    log($"LocalPlayerEntPtr:0x{localPlayer.EntPtr.ToString("X2")}\tLocalPlayerGuid:{localPlayer.Guid.high.ToString("X2")}{localPlayer.Guid.low.ToString("X2")}\tLocalPlayerName:{localPlayer.Name}");
+
+                }
+                catch (Exception e)
+                {
+                    //Logger.Log(e + "\n");
+                }
+            }
 
             if (onUnits)
             {
@@ -118,6 +145,25 @@ namespace FuncTest
                     //Logger.Log(e + "\n");
                 }
             }
+            if (onItems)
+            {
+                try
+                {
+                    log($"ItermsCount: {players.Count()}");
+                    foreach (WoWItem item in items)
+                    {
+                        log($"ItemEntPtr:0x{item.EntPtr.ToString("X2")}\tItemGuid:{item.Guid.high.ToString("X2")}{item.Guid.low.ToString("X2")}\tItemId:{item.Id}");
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    //Logger.Log(e + "\n");
+                }
+            }
         }
+
+
+      
     }
 }

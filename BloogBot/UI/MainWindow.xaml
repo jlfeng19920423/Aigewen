@@ -814,7 +814,7 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
 
-                    <Grid>
+                    <Grid Grid.ColumnSpan="2">
                         <Grid.RowDefinitions>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
@@ -847,6 +847,26 @@
                             HorizontalAlignment="Left"
                             Margin="0,0,10,0"
                             Padding="6,0,6,0"/>
+                        <CheckBox
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Content="Units"
+                                IsChecked="{Binding OnUnits}" Margin="92,0,-92,0"/>
+                        <CheckBox
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Content="GameObject"
+                                IsChecked="{Binding OnGameObjects}" Margin="145,0,-145,0"/>
+                        <CheckBox
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Content="Player"
+                                IsChecked="{Binding OnPlayers}" Margin="240,0,-240,0"/>
+                        <CheckBox
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Content="Item"
+                                IsChecked="{Binding OnItems}" Margin="299,0,-299,0"/>
 
                     </Grid>
 
@@ -879,6 +899,16 @@
                             Padding="6,0,6,0"/>
 
                     </Grid>
+                    <Label
+                        Grid.Row="1"
+                        Content="SpellCD:"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Right" Margin="130,11,143,-11"/>
+                    <TextBox
+                        Grid.Row="1"
+                        Text="{Binding SpellCD}"
+                        VerticalContentAlignment="Center"
+                        Margin="189,15,91,-7"/>
                 </Grid>
 
             </TabItem>
